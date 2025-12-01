@@ -6,6 +6,9 @@
 #' @name SNPtools
 #' @author
 #' Vinícius Junqueira \email{junqueiravinicius@hotmail.com}
+#' Roberto Higa \email{roberto.higa@embrapa.br}
+#' Fernando Flores Cardoso \email{fernando.cardoso@embrapa.br}
+#' Marcos Jun Iti Yokoo \email{marcos.yokoo@embrapa.br}
 "_PACKAGE"
 
 dummy_imports <- function() {

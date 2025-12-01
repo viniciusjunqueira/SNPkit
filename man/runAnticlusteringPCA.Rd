@@ -37,7 +37,7 @@ Converts a SNPDataLong object to a data.frame, runs PCA, and performs
 anticlustering on the selected principal components.
 }
 \examples{
-\dontshow{if (requireNamespace("anticlust", quietly = TRUE) && exists("nelore_imputed")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (requireNamespace("anticlust", quietly = TRUE) && exists("nelore_imputed")) withAutoprint(\{ # examplesIf}
 res <- runAnticlusteringPCA(nelore_imputed, K = 2, n_pcs = 0.8)
 table(res$groups)
 \dontshow{\}) # examplesIf}

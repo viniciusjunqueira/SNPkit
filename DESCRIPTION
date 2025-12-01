@@ -1,9 +1,24 @@
 Package: SNPtools
 Title: S4 Tools for Reading and Organizing Genetic Data
 Version: 0.1.0
-Authors@R: c(
-    person(given = "Vinícius", family = "Junqueira",
-           email = "junqueiravinicius@hotmail.com", role = c("aut", "cre")))
+Authors@R: 
+    c(person(given = "Vinícius",
+             family = "Junqueira",
+             role = c("aut", "cre"),
+             email = "junqueiravinicius@hotmail.com"),
+      person(given = "Roberto",
+             family = "Higa",
+             role = "aut",
+             email = "roberto.higa@embrapa.br"),
+      person(given = "Fernando Flores",
+             family = "Cardoso",
+             role = "aut",
+             email = "fernando.cardoso@embrapa.br"),
+      person(given = "Marcos Jun Iti",
+             family = "Yokoo",
+             role = "aut",
+             email = "marcos.yokoo@embrapa.br"))
+Author: Vinícius Junqueira, Roberto Higa, Fernando Flores Cardoso, Marcos Jun Iti Yokoo
 Maintainer: Vinícius Junqueira <junqueiravinicius@hotmail.com>
 Description: SNPtools provides an integrated suite of tools for handling SNP genotype data in large-scale genetic studies. The package supports importing and merging genotype files, performing quality control on SNP markers and samples, and preparing data for downstream analyses using popular software such as FImpute and PLINK. It offers S4 classes and methods to efficiently encapsulate SNP data, along with utilities for generating genotype summary statistics and visualization. Additional functionalities in the current version include anticlustering approaches for batch effect control, automated script generation for external software, and streamlined workflows for large datasets commonly encountered in animal and plant breeding programs. The package is designed to facilitate reproducible and scalable SNP data analyses in quantitative and statistical genetics.
 Logo: man/figures/logo.png
@@ -35,4 +50,4 @@ Encoding: UTF-8
 License: GPL-3 + file LICENSE
 URL: https://viniciusjunqueira.github.io/SNPtools
 BugReports: https://github.com/viniciusjunqueira/SNPtools/issues
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3

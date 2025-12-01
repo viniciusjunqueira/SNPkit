@@ -22,6 +22,3 @@ df <- data.frame(Call.rate = c(0.85, 0.95), row.names = c("SNP1", "SNP2"))
 check.call.rate(df, 0.9)
 
 }
-\author{
-Roberto Higa
-}

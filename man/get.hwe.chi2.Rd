@@ -20,6 +20,3 @@ df <- data.frame(Calls = c(100, 100), P.AA = c(0.6, 0.4), P.AB = c(0.3, 0.4), P.
 get.hwe.chi2(df)
 
 }
-\author{
-Roberto Higa, adapted by Vinicius Junqueira
-}

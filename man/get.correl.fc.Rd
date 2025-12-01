@@ -23,6 +23,3 @@ g2 <- sample(0:2, 10, TRUE)
 get.correl.fc(g1, g2)
 
 }
-\author{
-Roberto Higa
-}

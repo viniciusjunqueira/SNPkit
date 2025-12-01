@@ -29,6 +29,3 @@ df <- data.frame(Chromosome = c(1, 1, 2),
 check.snp.same.position(df)
 
 }
-\author{
-Roberto Higa, adaptaded by Vinicius Junqueira
-}
