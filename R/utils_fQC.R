@@ -1,9 +1,9 @@
-# ================================================================
+# =========================================================================
 # Functions from fQC package
 # Original author: Roberto Higa <roberto.higa@embrapa.br>
 # License: GPL-3
-# Copied and integrated into SNPtools by Vinicius, 2025
-# ================================================================
+# Copied, integrated, and adapted into SNPtools by Vinicius Junqueira, 2025
+# =========================================================================
 
 #' Check SNP call rate
 #'
@@ -18,7 +18,6 @@
 #' df <- data.frame(Call.rate = c(0.85, 0.95), row.names = c("SNP1", "SNP2"))
 #' check.call.rate(df, 0.9)
 #'
-#' @author Roberto Higa
 #' @export
 check.call.rate <- function(summary, min.call.rate) {
   result <- summary$Call.rate < min.call.rate
@@ -42,7 +41,6 @@ check.call.rate <- function(summary, min.call.rate) {
 #' check.ibs(c(1, 1))
 #' check.ibs(c(1, 3))
 #'
-#' @author Roberto Higa
 #' @export
 check.ibs <- function(gen) {
   ret <- -1
@@ -70,7 +68,6 @@ check.ibs <- function(gen) {
 #' rownames(mat) <- paste0("S", 1:5)
 #' check.identical.samples(mat, 0.5)
 #'
-#' @author Roberto Higa, adapted by Vinicius Junqueira
 #' @importFrom methods as
 #' @export
 check.identical.samples <- function(genotypes, threshold = 0) {
@@ -118,7 +115,6 @@ check.identical.samples <- function(genotypes, threshold = 0) {
 #' @examples
 #' # See check.identical.samples example
 #'
-#' @author Roberto Higa
 #' @export
 check.identical.samples.by.block <- function(genotypes, blcsize, threshold = 0) {
   pairs.c <- list()
@@ -160,7 +156,6 @@ check.identical.samples.by.block <- function(genotypes, blcsize, threshold = 0) 
 #' @examples
 #' # Requires proper parent-child genotype data
 #'
-#' @author Roberto Higa
 #' @export
 check.mendelian.inconsistencies <- function(genotypes, father, child) {
   sample1 <- NULL
@@ -205,7 +200,6 @@ check.mendelian.inconsistencies <- function(genotypes, father, child) {
 #' @examples
 #' # Used internally by check.mendelian.inconsistencies
 #'
-#' @author Roberto Higa
 #' @export
 check.mendelian.inconsistencies.pair <- function(g1, g2) {
   inconsist <- (g1 == 1 & g2 == 3) | (g1 == 3 & g2 == 1)
@@ -228,7 +222,6 @@ check.mendelian.inconsistencies.pair <- function(g1, g2) {
 #' rownames(ss) <- c("Ind1", "Ind2", "Ind3")
 #' check.sample.heterozygosity(ss, 1)
 #'
-#' @author Roberto Higa, adapted by Vinicius Junqueira
 #' @importFrom stats sd
 #' @export
 check.sample.heterozygosity <- function(sample.summary, max.dev) {
@@ -264,7 +257,6 @@ check.sample.heterozygosity <- function(sample.summary, max.dev) {
 #' snpmap <- data.frame(Chromosome = c(1, 1, 2), Name = c("SNP1", "SNP2", "SNP3"))
 #' check.snp.chromo(snpmap, 1)
 #'
-#' @author Roberto Higa
 #' @export
 check.snp.chromo <- function(snpmap, chromosomes) {
   snps <- snpmap[snpmap$Chromosome %in% chromosomes, "Name"]
@@ -287,7 +279,6 @@ check.snp.chromo <- function(snpmap, chromosomes) {
 #' df <- data.frame(z.HWE = c(2, 5), row.names = c("SNP1", "SNP2"))
 #' check.snp.hwe(df, 3)
 #'
-#' @author Roberto Higa
 #' @export
 check.snp.hwe <- function(snp.summary, max.dev) {
   result <- snp.summary$z.HWE^2 >= max.dev^2
@@ -312,7 +303,6 @@ check.snp.hwe <- function(snp.summary, max.dev) {
 #' df <- data.frame(MAF = c(0.01, 0.2), row.names = c("SNP1", "SNP2"))
 #' check.snp.maf(df, 0.05)
 #'
-#' @author Roberto Higa
 #' @export
 check.snp.maf <- function(snp.summary, min.maf) {
   result <- snp.summary$MAF < min.maf
@@ -338,7 +328,6 @@ check.snp.maf <- function(snp.summary, min.maf) {
 #' rownames(df) <- c("SNP1", "SNP2")
 #' check.snp.mgf(df, 0.05)
 #'
-#' @author Roberto Higa
 #' @export
 check.snp.mgf <- function(snp.summary, min.mgf) {
   result <- snp.summary$P.AA < min.mgf | snp.summary$P.AB < min.mgf | snp.summary$P.BB < min.mgf
@@ -363,7 +352,6 @@ check.snp.mgf <- function(snp.summary, min.mgf) {
 #' rownames(df) <- c("SNP1", "SNP2")
 #' check.snp.monomorf(df)
 #'
-#' @author Roberto Higa
 #' @export
 check.snp.monomorf <- function(snp.summary) {
   result <- snp.summary$P.AA == 1 | snp.summary$P.AB == 1 | snp.summary$P.BB == 1
@@ -387,7 +375,6 @@ check.snp.monomorf <- function(snp.summary) {
 #' df <- data.frame(Position = c(0, 100), Name = c("SNP1", "SNP2"))
 #' check.snp.no.position(df)
 #'
-#' @author Roberto Higa
 #' @export
 check.snp.no.position <- function(snpmap) {
   snps <- snpmap[snpmap[, "Position"] == 0, "Name"]
@@ -411,7 +398,6 @@ check.snp.no.position <- function(snpmap) {
 #'                  Name = c("SNP1", "SNP2", "SNP3"))
 #' check.snp.same.position(df)
 #'
-#' @author Roberto Higa, adaptaded by Vinicius Junqueira
 #' @export
 check.snp.same.position <- function(snpmap) {
   chromo <- unique(snpmap[, "Chromosome"])
@@ -459,7 +445,6 @@ check.snp.same.position <- function(snpmap) {
 #' g2 <- sample(0:2, 10, TRUE)
 #' ibs.pair(g1, g2)
 #'
-#' @author Roberto Higa
 #' @export
 ibs.pair <- function(g1, g2) {
   mat <- rbind(g1, g2)
@@ -482,7 +467,6 @@ ibs.pair <- function(g1, g2) {
 #' pairs <- matrix(c("A", "B", "B", "C", "D", "E"), ncol = 2, byrow = TRUE)
 #' pairs2sets(pairs)
 #'
-#' @author Roberto Higa
 #' @export
 pairs2sets <- function(pairs) {
   if (length(pairs) > 0) {
@@ -522,7 +506,6 @@ pairs2sets <- function(pairs) {
 #' @examples
 #' # Requires matrix of numeric genotypes
 #'
-#' @author Roberto Higa
 #' @export
 doPCA <- function(genotypes) {
   xxmat <- snpStats::xxt(genotypes, correct.for.missing = FALSE)
@@ -554,7 +537,6 @@ doPCA <- function(genotypes) {
 #' @examples
 #' # Requires proper SNP and sample summary data frames
 #'
-#' @author Roberto Higa, adapted by Vinicius Junqueira
 #' @importFrom grDevices jpeg dev.off
 #' @importFrom graphics par hist text plot
 #' @importFrom MASS isoMDS
@@ -640,7 +622,6 @@ exploratory.plots <- function(snp.summary, snps.plot, sample.summary, samples.pl
 #' g2 <- sample(0:2, 10, TRUE)
 #' get.correl.fc(g1, g2)
 #'
-#' @author Roberto Higa
 #' @export
 get.correl.fc <- function(g1, g2) {
   g1 <- as.raw(g1)
@@ -666,7 +647,6 @@ get.correl.fc <- function(g1, g2) {
 #' rownames(df) <- c("A", "B", "C")
 #' get.gender(df, 0.2, 0.5)
 #'
-#' @author Roberto Higa
 #' @export
 get.gender <- function(sample.summary, threshM, threshF) {
   if (threshM > threshF | threshM <= 0 | threshF <= 0) {
@@ -694,7 +674,6 @@ get.gender <- function(sample.summary, threshM, threshF) {
 #' df <- data.frame(Calls = c(100, 100), P.AA = c(0.6, 0.4), P.AB = c(0.3, 0.4), P.BB = c(0.1, 0.2))
 #' get.hwe.chi2(df)
 #'
-#' @author Roberto Higa, adapted by Vinicius Junqueira
 #' @importFrom stats pchisq
 #' @export
 get.hwe.chi2 <- function(snp.summary) {

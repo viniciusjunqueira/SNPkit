@@ -23,6 +23,3 @@ rownames(ss) <- c("Ind1", "Ind2", "Ind3")
 check.sample.heterozygosity(ss, 1)
 
 }
-\author{
-Roberto Higa, adapted by Vinicius Junqueira
-}

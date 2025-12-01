@@ -26,8 +26,18 @@ Useful links:
 }
 \author{
 Vinícius Junqueira \email{junqueiravinicius@hotmail.com}
+Roberto Higa \email{roberto.higa@embrapa.br}
+Fernando Flores Cardoso \email{fernando.cardoso@embrapa.br}
+Marcos Jun Iti Yokoo \email{marcos.yokoo@embrapa.br}
 
 \strong{Maintainer}: Vinícius Junqueira \email{junqueiravinicius@hotmail.com}
+
+Authors:
+\itemize{
+  \item Roberto Higa \email{roberto.higa@embrapa.br}
+  \item Fernando Flores Cardoso \email{fernando.cardoso@embrapa.br}
+  \item Marcos Jun Iti Yokoo \email{marcos.yokoo@embrapa.br}
+}
 
 }
 \keyword{internal}

@@ -23,6 +23,3 @@ rownames(mat) <- paste0("S", 1:5)
 check.identical.samples(mat, 0.5)
 
 }
-\author{
-Roberto Higa, adapted by Vinicius Junqueira
-}

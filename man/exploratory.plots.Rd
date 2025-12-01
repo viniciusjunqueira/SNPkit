@@ -42,6 +42,3 @@ Generates exploratory plots: MAF histograms, HWE plots, heterozygosity scatter, 
 # Requires proper SNP and sample summary data frames
 
 }
-\author{
-Roberto Higa, adapted by Vinicius Junqueira
-}
