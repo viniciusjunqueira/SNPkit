@@ -1,4 +1,4 @@
-#' @useDynLib SNPtools, .registration = TRUE
+#' @useDynLib SNPkit, .registration = TRUE
 #' @importFrom Rcpp evalCpp
 #' @importClassesFrom snpStats SnpMatrix
 NULL

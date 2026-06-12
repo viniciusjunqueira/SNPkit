@@ -14,11 +14,17 @@ Rplots.pdf
 # Outputs temporários
 fimpute_run*/
 plink_*/
-SNPtools.Rcheck/
+SNPkit.Rcheck/
 .Rcheck/
 
 # MacOS
 .DS_Store
+
+# Claude Code
+.claude/
+
+# R session
+.Rhistory
 
 # Docs auxiliares
 inst/doc

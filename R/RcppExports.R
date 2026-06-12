@@ -2,10 +2,10 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 write_fimpute_cpp <- function(geno_mat, ids, file_path) {
-    invisible(.Call(`_SNPtools_write_fimpute_cpp`, geno_mat, ids, file_path))
+    invisible(.Call(`_SNPkit_write_fimpute_cpp`, geno_mat, ids, file_path))
 }
 
 readFImputeCpp <- function(genotype_file, nrows, nsnps) {
-    .Call(`_SNPtools_readFImputeCpp`, genotype_file, nrows, nsnps)
+    .Call(`_SNPkit_readFImputeCpp`, genotype_file, nrows, nsnps)
 }
 
