@@ -5,5 +5,12 @@
 ^\.Rproj\.user$
 ^doc$
 ^Meta$
-^SNPtools-package\\.R$
-^SNPtools_0\\.1\\.0\\.pdf$
+^SNPkit_.*\.pdf$
+^SNPkit_.*\.tar\.gz$
+^SNPkit\.Rcheck$
+^build\.R$
+^cran-comments\.md$
+^\.claude$
+^\.github$
+^\.DS_Store$
+^\.Rhistory$

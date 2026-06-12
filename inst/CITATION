@@ -1,11 +1,11 @@
-citHeader("To cite the 'SNPtools' package in publications, use:")
+citHeader("To cite the 'SNPkit' package in publications, use:")
 
 bibentry(
   "Manual",
-  title = "SNPtools: S4 Tools for Reading and Organizing Genetic Data",
-  author = person(given = "Vinicius", family = "Junqueira", 
+  title = "SNPkit: S4 Tools for Reading and Organizing Genetic Data",
+  author = person(given = "Vinicius", family = "Junqueira",
                   email = "junqueiravinicius@hotmail.com", role = c("aut", "cre")),
   year = 2025,
   note = "R package version 0.1.0",
-  url = "https://github.com/viniciusjunqueira/SNPtools"
+  url = "https://github.com/viniciusjunqueira/SNPkit"
 )

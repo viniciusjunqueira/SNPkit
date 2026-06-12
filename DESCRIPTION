@@ -1,7 +1,7 @@
-Package: SNPtools
+Package: SNPkit
 Title: S4 Tools for Reading and Organizing Genetic Data
 Version: 0.1.0
-Authors@R: 
+Authors@R:
     c(person(given = "Vinícius",
              family = "Junqueira",
              role = c("aut", "cre"),
@@ -18,10 +18,19 @@ Authors@R:
              family = "Yokoo",
              role = "aut",
              email = "marcos.yokoo@embrapa.br"))
-Author: Vinícius Junqueira, Roberto Higa, Fernando Flores Cardoso, Marcos Jun Iti Yokoo
-Maintainer: Vinícius Junqueira <junqueiravinicius@hotmail.com>
-Description: SNPtools provides an integrated suite of tools for handling SNP genotype data in large-scale genetic studies. The package supports importing and merging genotype files, performing quality control on SNP markers and samples, and preparing data for downstream analyses using popular software such as FImpute and PLINK. It offers S4 classes and methods to efficiently encapsulate SNP data, along with utilities for generating genotype summary statistics and visualization. Additional functionalities in the current version include anticlustering approaches for batch effect control, automated script generation for external software, and streamlined workflows for large datasets commonly encountered in animal and plant breeding programs. The package is designed to facilitate reproducible and scalable SNP data analyses in quantitative and statistical genetics.
-Logo: man/figures/logo.png
+Description: Provides an integrated suite of tools for handling single
+    nucleotide polymorphism (SNP) genotype data in large-scale genetic
+    studies. Supports importing and merging genotype files, performing
+    quality control on SNP markers and samples, and preparing data for
+    downstream analyses using popular software such as 'FImpute' and
+    'PLINK'. Offers S4 classes and methods to efficiently encapsulate SNP
+    data, along with utilities for generating genotype summary statistics
+    and visualization. Additional functionalities include anticlustering
+    approaches for batch effect control, automated script generation for
+    external software, and streamlined workflows for large datasets
+    commonly encountered in animal and plant breeding programs. Designed
+    to facilitate reproducible and scalable SNP data analyses in
+    quantitative and statistical genetics.
 Depends:
     R (>= 4.1.0)
 Imports:
@@ -40,14 +49,14 @@ Imports:
     snpStats,
     magrittr,
     reshape2
-LinkingTo: 
+LinkingTo:
     Rcpp
 Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
 Encoding: UTF-8
-License: GPL-3 + file LICENSE
-URL: https://viniciusjunqueira.github.io/SNPtools
-BugReports: https://github.com/viniciusjunqueira/SNPtools/issues
+License: GPL-3
+URL: https://viniciusjunqueira.github.io/SNPkit/, https://github.com/viniciusjunqueira/SNPkit
+BugReports: https://github.com/viniciusjunqueira/SNPkit/issues
 RoxygenNote: 7.3.3

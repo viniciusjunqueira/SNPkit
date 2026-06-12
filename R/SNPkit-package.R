@@ -1,9 +1,10 @@
-#' SNPtools
+#' SNPkit: S4 tools for reading and organizing genetic data
 #'
-#' S4 tools for reading and organizing genetic data.
+#' Utilities for reading, cleaning, summarizing, and modeling SNP genotype data.
 #'
+#' @keywords internal
 #' @docType package
-#' @name SNPtools
+#' @name SNPkit
 #' @author
 #' Vinícius Junqueira \email{junqueiravinicius@hotmail.com}
 #' Roberto Higa \email{roberto.higa@embrapa.br}

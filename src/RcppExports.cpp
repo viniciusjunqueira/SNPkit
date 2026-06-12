@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // write_fimpute_cpp
 void write_fimpute_cpp(CharacterMatrix geno_mat, CharacterVector ids, std::string file_path);
-RcppExport SEXP _SNPtools_write_fimpute_cpp(SEXP geno_matSEXP, SEXP idsSEXP, SEXP file_pathSEXP) {
+RcppExport SEXP _SNPkit_write_fimpute_cpp(SEXP geno_matSEXP, SEXP idsSEXP, SEXP file_pathSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< CharacterMatrix >::type geno_mat(geno_matSEXP);
@@ -24,7 +24,7 @@ END_RCPP
 }
 // readFImputeCpp
 IntegerMatrix readFImputeCpp(std::string genotype_file, int nrows, int nsnps);
-RcppExport SEXP _SNPtools_readFImputeCpp(SEXP genotype_fileSEXP, SEXP nrowsSEXP, SEXP nsnpsSEXP) {
+RcppExport SEXP _SNPkit_readFImputeCpp(SEXP genotype_fileSEXP, SEXP nrowsSEXP, SEXP nsnpsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -37,12 +37,12 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_SNPtools_write_fimpute_cpp", (DL_FUNC) &_SNPtools_write_fimpute_cpp, 3},
-    {"_SNPtools_readFImputeCpp", (DL_FUNC) &_SNPtools_readFImputeCpp, 3},
+    {"_SNPkit_write_fimpute_cpp", (DL_FUNC) &_SNPkit_write_fimpute_cpp, 3},
+    {"_SNPkit_readFImputeCpp", (DL_FUNC) &_SNPkit_readFImputeCpp, 3},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_SNPtools(DllInfo *dll) {
+RcppExport void R_init_SNPkit(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

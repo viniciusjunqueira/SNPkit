@@ -2,7 +2,7 @@
 # Functions from fQC package
 # Original author: Roberto Higa <roberto.higa@embrapa.br>
 # License: GPL-3
-# Copied, integrated, and adapted into SNPtools by Vinicius Junqueira, 2025
+# Copied, integrated, and adapted into SNPkit by Vinicius Junqueira, 2025
 # =========================================================================
 
 #' Check SNP call rate
