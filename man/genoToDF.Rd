@@ -21,8 +21,20 @@ Converts the genotype matrix (geno slot) of a SNPDataLong object to a data.frame
 with optional centering and scaling per SNP (column).
 }
 \examples{
-\dontrun{
-df <- genoToDF(nelore_imputed, center = TRUE, scale = TRUE)
+\donttest{
+set.seed(1)
+raw_mat <- matrix(as.raw(sample(1:3, 100, TRUE)), nrow = 10, ncol = 10)
+rownames(raw_mat) <- paste0("S", 1:10)
+colnames(raw_mat) <- paste0("SNP", 1:10)
+geno <- methods::new("SnpMatrix", raw_mat)
+obj <- methods::new("SNPDataLong",
+                    geno = geno,
+                    map  = data.frame(Name = colnames(geno),
+                                      Chromosome = 1,
+                                      Position = 1:10),
+                    path = tempfile(),
+                    xref_path = "chip1")
+df <- genoToDF(obj, center = TRUE, scale = TRUE)
 head(df[, 1:5])
 }
 }

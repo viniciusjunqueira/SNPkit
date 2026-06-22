@@ -8,9 +8,16 @@
 #' @return A single combined \code{SnpMatrix} with preserved row and column names.
 #'
 #' @examples
-#' \dontrun{
-#' cbind_SnpMatrix(matrix1, matrix2)
-#' }
+#' m1 <- methods::new("SnpMatrix",
+#'                    matrix(as.raw(1:3), nrow = 3, ncol = 2,
+#'                           dimnames = list(c("S1", "S2", "S3"),
+#'                                           c("SNP1", "SNP2"))))
+#' m2 <- methods::new("SnpMatrix",
+#'                    matrix(as.raw(1:3), nrow = 3, ncol = 2,
+#'                           dimnames = list(c("S1", "S2", "S3"),
+#'                                           c("SNP3", "SNP4"))))
+#' cbind_SnpMatrix(m1, m2)
+#'
 #' @export
 cbind_SnpMatrix <- function(...) {
   mats <- list(...)
@@ -45,9 +52,16 @@ cbind_SnpMatrix <- function(...) {
 #' @return A single combined \code{SnpMatrix} with preserved row and column names.
 #'
 #' @examples
-#' \dontrun{
-#' rbind_SnpMatrix(matrix1, matrix2)
-#' }
+#' m1 <- methods::new("SnpMatrix",
+#'                    matrix(as.raw(1:3), nrow = 2, ncol = 3,
+#'                           dimnames = list(c("S1", "S2"),
+#'                                           c("SNP1", "SNP2", "SNP3"))))
+#' m2 <- methods::new("SnpMatrix",
+#'                    matrix(as.raw(1:3), nrow = 2, ncol = 3,
+#'                           dimnames = list(c("S3", "S4"),
+#'                                           c("SNP1", "SNP2", "SNP3"))))
+#' rbind_SnpMatrix(m1, m2)
+#'
 #' @export
 rbind_SnpMatrix <- function(...) {
   mats <- list(...)
@@ -85,8 +99,24 @@ rbind_SnpMatrix <- function(...) {
 #' and a concatenated path string.
 #'
 #' @examples
-#' \dontrun{
-#' combined <- combineSNPData(list(snp_obj1, snp_obj2, snp_obj3))
+#' \donttest{
+#' make_obj <- function(samples, snps) {
+#'   m <- methods::new("SnpMatrix",
+#'                     matrix(as.raw(1:3),
+#'                            nrow = length(samples),
+#'                            ncol = length(snps),
+#'                            dimnames = list(samples, snps)))
+#'   methods::new("SNPDataLong",
+#'                geno = m,
+#'                map  = data.frame(Name = snps,
+#'                                  Chromosome = 1,
+#'                                  Position = seq_along(snps)),
+#'                path = tempfile(),
+#'                xref_path = "chip1")
+#' }
+#' obj1 <- make_obj(c("S1", "S2"), c("SNP1", "SNP2"))
+#' obj2 <- make_obj(c("S3", "S4"), c("SNP2", "SNP3"))
+#' combined <- combineSNPData(list(obj1, obj2))
 #' }
 #'
 #' @importFrom methods new as
@@ -139,7 +169,8 @@ combineSNPData <- function(lista) {
   message("Combination complete. Final matrix: ", nrow(geno_comb), " samples x ", ncol(geno_comb), " SNPs.")
 
   new("SNPDataLong",
-      geno = geno_comb,
-      map  = map_final,
-      path = paste(sapply(lista, function(x) x@path), collapse = ";"))
+      geno      = geno_comb,
+      map       = map_final,
+      path      = paste(sapply(lista, function(x) x@path), collapse = ";"),
+      xref_path = paste(sapply(lista, function(x) x@xref_path), collapse = ";"))
 }

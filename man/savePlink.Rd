@@ -6,7 +6,7 @@
 \usage{
 savePlink(
   object,
-  path = "plink_out",
+  path,
   name = "plink_data",
   run_plink = TRUE,
   chunk_size = 1000
@@ -15,7 +15,8 @@ savePlink(
 \arguments{
 \item{object}{An object of class SNPDataLong.}
 
-\item{path}{Character. Directory where files will be saved.}
+\item{path}{Character. Directory where files will be saved. Must be supplied
+by the caller (e.g. a folder inside \code{tempdir()} for examples).}
 
 \item{name}{Character. Base name for PLINK output files.}
 
@@ -24,13 +25,28 @@ savePlink(
 \item{chunk_size}{Integer. Number of individuals per chunk for writing .ped file (default: 1000).}
 }
 \value{
-No return value. Files are saved to disk.
+No return value, called for side effects. Files (\code{.ped}/\code{.map},
+  and \code{.bed}/\code{.bim}/\code{.fam} when \code{run_plink = TRUE}) are
+  written under \code{path}.
 }
 \description{
 Saves genotype and map data from an SNPDataLong object in PLINK format (.ped/.map and optionally binary files).
 }
 \examples{
-\dontrun{
-savePlink(genotypes_qc, path = "plink_out", name = "nelore_qc", run_plink = TRUE, chunk_size = 2000)
+\donttest{
+set.seed(1)
+raw_mat <- matrix(as.raw(sample(1:3, 100, TRUE)), nrow = 10, ncol = 10)
+rownames(raw_mat) <- paste0("S", 1:10)
+colnames(raw_mat) <- paste0("SNP", 1:10)
+geno <- methods::new("SnpMatrix", raw_mat)
+obj <- methods::new("SNPDataLong",
+                    geno = geno,
+                    map  = data.frame(Name = colnames(geno),
+                                      Chromosome = 1,
+                                      Position = 1:10),
+                    path = tempfile(),
+                    xref_path = "chip1")
+savePlink(obj, path = tempdir(), name = "demo",
+          run_plink = FALSE, chunk_size = 5)
 }
 }

@@ -12,7 +12,11 @@ read.fimpute(file, method = c("R", "Rcpp"))
 \item{method}{Character. "R" (default) for vectorized R implementation, or "Rcpp" for compiled C++ implementation.}
 }
 \value{
-An object of class \code{SNPDataLong} containing the imputed genotypes and SNP map.
+An object of class \code{SNPDataLong} with three slots:
+  \code{geno} (a \code{SnpMatrix} with individuals as rows and SNPs as
+  columns), \code{map} (a \code{data.frame} with columns \code{Name},
+  \code{Chromosome}, and \code{Position}), and \code{path} (the input
+  directory).
 }
 \description{
 Reads imputed genotypes and SNP information from FImpute output,
@@ -20,6 +24,8 @@ builds a SnpMatrix and a corresponding map, and returns an SNPDataLong object.
 }
 \examples{
 \dontrun{
+# Requires a directory containing FImpute output files
+# (genotypes_imp.txt and snp_info.txt).
 snp_long <- read.fimpute("output_fimpute", method = "R")
 }
 

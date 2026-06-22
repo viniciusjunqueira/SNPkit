@@ -15,6 +15,11 @@ saveFImputeRaw(geno, map, path, xref = NULL)
 
 \item{xref}{Optional vector of identifiers per individual (used to assign numeric chip IDs).}
 }
+\value{
+No return value, called for side effects. The function writes
+  three files (\code{data.gen}, \code{data.map}, and \code{fimpute.par}) to
+  the directory specified by \code{path} and returns \code{NULL} invisibly.
+}
 \description{
 Convenience function to export FImpute files directly from a `SnpMatrix` and map `data.frame`.
 }

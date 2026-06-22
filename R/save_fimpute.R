@@ -4,10 +4,13 @@
 #' S4 method to export genotype (.gen), map (.map), and parameter (fimpute.par) files compatible with [FImpute](https://www.aps.uoguelph.ca/~msargol/fimpute/).
 #'
 #' @param object An object of class `FImputeExport` or `SNPDataLong`.
-#' @param path Output directory (default: "fimpute_run" for SNPDataLong).
+#' @param path Output directory. Must be supplied by the caller (e.g. a path
+#'   inside \code{tempdir()} for examples).
 #' @param ... Additional arguments passed to methods.
 #'
-#' @return No return value. Files are saved to disk.
+#' @return No return value, called for side effects. The function writes the
+#'   files \code{data.gen}, \code{data.map}, and \code{fimpute.par} to the
+#'   directory \code{path} and returns \code{NULL} invisibly.
 #'
 #' @export
 setGeneric("saveFImpute", function(object, ...) standardGeneric("saveFImpute"))
@@ -20,7 +23,7 @@ setMethod("saveFImpute", "FImputeExport", function(object) {
 
 #' @rdname saveFImpute
 #' @export
-setMethod("saveFImpute", "SNPDataLong", function(object, path = NULL) {
+setMethod("saveFImpute", "SNPDataLong", function(object, path) {
   if (!requireNamespace("snpStats", quietly = TRUE)) {
     stop("The 'snpStats' package is required. Install it with install.packages('snpStats').")
   }
@@ -33,8 +36,8 @@ setMethod("saveFImpute", "SNPDataLong", function(object, path = NULL) {
     stop("The 'map' slot must be a data.frame.")
   }
 
-  if (is.null(path)) {
-    path <- "fimpute_run"
+  if (missing(path) || !is.character(path) || length(path) != 1) {
+    stop("'path' must be a single character string indicating the output directory.")
   }
 
   save_fimpute_raw(object@geno, object@map, path, xref = object@xref_path)
@@ -49,6 +52,10 @@ setMethod("saveFImpute", "SNPDataLong", function(object, path = NULL) {
 #' @param map A data.frame with columns 'Name', 'Chromosome', 'Position', and 'SourcePath'.
 #' @param path Output directory.
 #' @param xref Optional vector of identifiers per individual (used to assign numeric chip IDs).
+#'
+#' @return No return value, called for side effects. The function writes
+#'   three files (\code{data.gen}, \code{data.map}, and \code{fimpute.par}) to
+#'   the directory specified by \code{path} and returns \code{NULL} invisibly.
 #'
 #' @importFrom utils write.table
 #' @export

@@ -17,7 +17,14 @@ This function performs a column-wise binding of multiple \code{SnpMatrix} object
 explicitly preserving row names and column names, avoiding unexpected "object has no names" warnings.
 }
 \examples{
-\dontrun{
-cbind_SnpMatrix(matrix1, matrix2)
-}
+m1 <- methods::new("SnpMatrix",
+                   matrix(as.raw(1:3), nrow = 3, ncol = 2,
+                          dimnames = list(c("S1", "S2", "S3"),
+                                          c("SNP1", "SNP2"))))
+m2 <- methods::new("SnpMatrix",
+                   matrix(as.raw(1:3), nrow = 3, ncol = 2,
+                          dimnames = list(c("S1", "S2", "S3"),
+                                          c("SNP3", "SNP4"))))
+cbind_SnpMatrix(m1, m2)
+
 }

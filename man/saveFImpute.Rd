@@ -10,17 +10,20 @@ saveFImpute(object, ...)
 
 \S4method{saveFImpute}{FImputeExport}(object)
 
-\S4method{saveFImpute}{SNPDataLong}(object, path = NULL)
+\S4method{saveFImpute}{SNPDataLong}(object, path)
 }
 \arguments{
 \item{object}{An object of class `FImputeExport` or `SNPDataLong`.}
 
 \item{...}{Additional arguments passed to methods.}
 
-\item{path}{Output directory (default: "fimpute_run" for SNPDataLong).}
+\item{path}{Output directory. Must be supplied by the caller (e.g. a path
+inside \code{tempdir()} for examples).}
 }
 \value{
-No return value. Files are saved to disk.
+No return value, called for side effects. The function writes the
+  files \code{data.gen}, \code{data.map}, and \code{fimpute.par} to the
+  directory \code{path} and returns \code{NULL} invisibly.
 }
 \description{
 S4 method to export genotype (.gen), map (.map), and parameter (fimpute.par) files compatible with [FImpute](https://www.aps.uoguelph.ca/~msargol/fimpute/).

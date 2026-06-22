@@ -20,6 +20,11 @@ Data frame summarizing inconsistencies per pair.
 Identifies Mendelian inconsistencies between father-child pairs.
 }
 \examples{
-# Requires proper parent-child genotype data
+set.seed(1)
+genotypes <- matrix(sample(1:3, 30, TRUE), nrow = 3,
+                    dimnames = list(c("F1", "C1", "C2"), NULL))
+check.mendelian.inconsistencies(genotypes,
+                                father = "F1",
+                                child  = c("C1", "C2"))
 
 }

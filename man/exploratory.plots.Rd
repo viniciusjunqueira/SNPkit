@@ -39,6 +39,30 @@ NULL (plots are saved as JPEG files)
 Generates exploratory plots: MAF histograms, HWE plots, heterozygosity scatter, MDS, and dendrogram.
 }
 \examples{
-# Requires proper SNP and sample summary data frames
+\donttest{
+tmp <- tempfile(fileext = ".jpg")
+snp.summary <- data.frame(
+  MAF   = runif(20),
+  z.HWE = rnorm(20),
+  Calls = rep(100, 20),
+  P.AA  = runif(20, 0, 0.5),
+  P.AB  = runif(20, 0, 0.5),
+  P.BB  = runif(20, 0, 0.5)
+)
+sample.summary <- data.frame(
+  Call.rate      = runif(5, 0.9, 1),
+  Heterozygosity = runif(5, 0.2, 0.4),
+  row.names = paste0("S", 1:5)
+)
+distm <- stats::dist(matrix(rnorm(25), nrow = 5))
+exploratory.plots(snp.summary,
+                  snps.plot      = tempfile(fileext = ".jpg"),
+                  sample.summary = sample.summary,
+                  samples.plot   = tempfile(fileext = ".jpg"),
+                  distm          = distm,
+                  glabels        = paste0("S", 1:5),
+                  mds.plot       = tempfile(fileext = ".jpg"),
+                  hierq.plot     = tempfile(fileext = ".jpg"))
+}
 
 }
