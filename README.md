@@ -1,5 +1,9 @@
 # SNPkit
 
+<!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/SNPkit)](https://CRAN.R-project.org/package=SNPkit) [![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/SNPkit)](https://CRAN.R-project.org/package=SNPkit) [![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://viniciusjunqueira.github.io/SNPkit/) [![GitHub issues](https://img.shields.io/github/issues/viniciusjunqueira/SNPkit)](https://github.com/viniciusjunqueira/SNPkit/issues)
+<!-- badges: end -->
+
 `SNPkit` is an R package designed for manipulation, organization, and analysis of genotypic data, with a strong focus on integration with tools such as **FImpute** and **PLINK**.
 
 It provides robust S4-based data structures for storing genotypes and marker maps, along with functions to combine different genotype panels, summarize data, and prepare files for imputation and selection pipelines.
@@ -8,13 +12,16 @@ It provides robust S4-based data structures for storing genotypes and marker map
 
 ## 📦 Installation
 
-To install directly from GitHub, use the `devtools` package:
+Install the stable release from [CRAN](https://CRAN.R-project.org/package=SNPkit):
 
 ``` r
-# Install devtools if not already installed
-install.packages("devtools")
+install.packages("SNPkit")
+```
 
-# Install SNPkit from GitHub
+Or install the development version (latest features) from GitHub:
+
+``` r
+# install.packages("devtools")
 devtools::install_github("viniciusjunqueira/SNPkit")
 ```
 
@@ -36,5 +43,3 @@ Key pages:
 ## 📄 License
 
 SNPkit is licensed under the [GPL-3](https://www.gnu.org/licenses/gpl-3.0.html) license.
-
-[![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://viniciusjunqueira.github.io/SNPkit/) [![GitHub issues](https://img.shields.io/github/issues/viniciusjunqueira/SNPkit)](https://github.com/viniciusjunqueira/SNPkit/issues)

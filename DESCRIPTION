@@ -1,6 +1,6 @@
 Package: SNPkit
 Title: S4 Tools for Reading and Organizing Genetic Data
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R:
     c(person(given = "Vinícius",
              family = "Junqueira",
