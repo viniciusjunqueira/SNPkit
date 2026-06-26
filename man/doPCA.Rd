@@ -16,6 +16,14 @@ List containing `pcs` (principal components) and `eigen` (eigenvalues).
 Performs PCA using the genome relationship matrix (GRM).
 }
 \examples{
-# Requires matrix of numeric genotypes
+\donttest{
+set.seed(1)
+mat <- matrix(sample(as.raw(1:3), 200, TRUE), nrow = 10, ncol = 20)
+geno <- methods::new("SnpMatrix", mat)
+rownames(geno) <- paste0("S", 1:10)
+colnames(geno) <- paste0("SNP", 1:20)
+res <- doPCA(geno)
+str(res)
+}
 
 }

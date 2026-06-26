@@ -10,24 +10,21 @@
 #' @return An updated `FImputeRunner` object with the `results` slot populated (SNPDataLong).
 #' @examples
 #' \dontrun{
-#' # Example: Running FImpute from a FImputeRunner object
-#'
-#' path_fimpute <- "fimpute_run_example"
+#' # Requires the external FImpute3 binary in PATH.
+#' path_fimpute <- file.path(tempdir(), "fimpute_run_example")
 #' param_file <- file.path(path_fimpute, "fimpute.par")
-#' fimpute_exec <- "FImpute3"  # assuming it is in PATH
 #'
-#' export_obj <- new("FImputeExport",
-#'                   geno = geno_obj@geno,
-#'                   map = geno_obj@map,
-#'                   path = path_fimpute)
+#' export_obj <- methods::new("FImputeExport",
+#'                            geno = geno_obj@geno,
+#'                            map  = geno_obj@map,
+#'                            path = path_fimpute)
 #'
-#' runner <- new("FImputeRunner",
-#'               export = export_obj,
-#'               par_file = param_file,
-#'               exec_path = fimpute_exec)
+#' runner <- methods::new("FImputeRunner",
+#'                        export    = export_obj,
+#'                        par_file  = param_file,
+#'                        exec_path = "FImpute3")
 #'
-#' runner <- runFImpute(runner, verbose = TRUE)
-#' head(runner@results@geno)
+#' res <- runFImpute(runner, verbose = TRUE)
 #' }
 #' @importFrom methods new
 #' @export

@@ -1,8 +1,8 @@
 ---
-title: "Introduction"
+title: "Getting started with SNPkit"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{introducao}
+  %\VignetteIndexEntry{Getting started with SNPkit}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -10,10 +10,121 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment  = "#>"
 )
 ```
 
 ```{r setup}
 library(SNPkit)
+library(snpStats)
+library(methods)
 ```
+
+# Overview
+
+**SNPkit** provides a set of S4 tools for reading, organising, summarising,
+filtering and exporting single nucleotide polymorphism (SNP) genotype data.
+The central data structure is `SNPDataLong`, which bundles a genotype matrix
+(`snpStats::SnpMatrix`), a marker map (`data.frame`), and metadata about the
+data source.
+
+This vignette walks through the typical steps:
+
+1.  Building an `SNPDataLong` object from a toy genotype matrix.
+2.  Inspecting the object with `summary()`.
+3.  Applying quality-control filters with `qcSNPs()`.
+4.  Exporting the cleaned data for use with external tools.
+
+All file output uses `tempdir()` so the example does not write to the
+user's home filespace.
+
+# Building an `SNPDataLong` object
+
+We simulate a tiny dataset with 10 individuals and 10 SNPs.
+
+```{r build}
+set.seed(123)
+
+raw_mat <- matrix(
+  as.raw(sample(1:3, 100, replace = TRUE)),
+  nrow = 10, ncol = 10
+)
+rownames(raw_mat) <- paste0("ind", 1:10)
+colnames(raw_mat) <- paste0("snp", 1:10)
+
+geno <- new("SnpMatrix", raw_mat)
+
+map <- data.frame(
+  Name       = colnames(geno),
+  Chromosome = rep(1, 10),
+  Position   = seq_len(10),
+  stringsAsFactors = FALSE
+)
+
+snp_data <- new(
+  "SNPDataLong",
+  geno      = geno,
+  map       = map,
+  path      = tempfile(),
+  xref_path = "chip1"
+)
+
+snp_data
+```
+
+# Inspecting the object
+
+The `summary()` method returns a `summary.SNPDataLong` object that can be
+printed for a human-readable description or queried programmatically.
+
+```{r summary}
+s <- summary(snp_data)
+s$n_individuals
+s$n_snps
+s$prop_missing
+print(s)
+```
+
+# Quality control
+
+`qcSNPs()` applies a flexible set of filters. The `action` argument controls
+whether the function returns a report of removed SNPs (`"report"`), a filtered
+`SNPDataLong` (`"filter"`), or both.
+
+```{r qc}
+filtered <- qcSNPs(
+  snp_data,
+  min_snp_cr   = 0.8,
+  min_maf      = 0.05,
+  snp_mono     = TRUE,
+  no_position  = TRUE,
+  action       = "filter"
+)
+filtered
+```
+
+# Exporting
+
+`savePlink()` and `saveFImpute()` write files to a user-supplied directory.
+For this vignette we use `tempdir()`.
+
+```{r export}
+out_dir <- file.path(tempdir(), "snpkit_demo")
+dir.create(out_dir, showWarnings = FALSE)
+
+savePlink(
+  filtered,
+  path       = out_dir,
+  name       = "demo",
+  run_plink  = FALSE,
+  chunk_size = 5
+)
+list.files(out_dir, pattern = "demo")
+```
+
+# Where to go next
+
+See `?qcSNPs`, `?savePlink`, `?saveFImpute`, and `?runAnticlusteringPCA` for
+details on the individual functions. Functions that wrap external software
+(FImpute, PLINK, ADMIXTURE) require the corresponding binary to be installed
+on the system.

@@ -3,22 +3,42 @@
 #' Saves genotype and map data from an SNPDataLong object in PLINK format (.ped/.map and optionally binary files).
 #'
 #' @param object An object of class SNPDataLong.
-#' @param path Character. Directory where files will be saved.
+#' @param path Character. Directory where files will be saved. Must be supplied
+#'   by the caller (e.g. a folder inside \code{tempdir()} for examples).
 #' @param name Character. Base name for PLINK output files.
 #' @param run_plink Logical. If TRUE (default), runs PLINK1 to convert to binary files. If FALSE, only .ped and .map files are saved.
 #' @param chunk_size Integer. Number of individuals per chunk for writing .ped file (default: 1000).
 #'
-#' @return No return value. Files are saved to disk.
+#' @return No return value, called for side effects. Files (\code{.ped}/\code{.map},
+#'   and \code{.bed}/\code{.bim}/\code{.fam} when \code{run_plink = TRUE}) are
+#'   written under \code{path}.
 #'
 #' @examples
-#' \dontrun{
-#' savePlink(genotypes_qc, path = "plink_out", name = "nelore_qc", run_plink = TRUE, chunk_size = 2000)
+#' \donttest{
+#' set.seed(1)
+#' raw_mat <- matrix(as.raw(sample(1:3, 100, TRUE)), nrow = 10, ncol = 10)
+#' rownames(raw_mat) <- paste0("S", 1:10)
+#' colnames(raw_mat) <- paste0("SNP", 1:10)
+#' geno <- methods::new("SnpMatrix", raw_mat)
+#' obj <- methods::new("SNPDataLong",
+#'                     geno = geno,
+#'                     map  = data.frame(Name = colnames(geno),
+#'                                       Chromosome = 1,
+#'                                       Position = 1:10),
+#'                     path = tempfile(),
+#'                     xref_path = "chip1")
+#' savePlink(obj, path = tempdir(), name = "demo",
+#'           run_plink = FALSE, chunk_size = 5)
 #' }
 #' @importFrom utils write.table
 #' @export
-savePlink <- function(object, path = "plink_out", name = "plink_data", run_plink = TRUE, chunk_size = 1000) {
+savePlink <- function(object, path, name = "plink_data", run_plink = TRUE, chunk_size = 1000) {
   if (!inherits(object, "SNPDataLong")) {
     stop("Input object must be of class SNPDataLong.")
+  }
+
+  if (missing(path) || !is.character(path) || length(path) != 1) {
+    stop("'path' must be a single character string indicating the output directory.")
   }
 
   qc_header("Saving Files in Plink Format")
@@ -29,14 +49,14 @@ savePlink <- function(object, path = "plink_out", name = "plink_data", run_plink
 
   if (!dir.exists(path)) {
     dir.create(path, recursive = TRUE)
-    cat("Created output directory:", path, "\n")
+    message("Created output directory: ", path)
   }
 
   ## ----- PED file -----
   ped_file <- file.path(path, paste0(name, ".ped"))
   smp <- rownames(geno)
 
-  cat("Writing .ped file in chunks...\n")
+  message("Writing .ped file in chunks...")
   con <- file(ped_file, "wt")
 
   for (start in seq(1, n_ind, by = chunk_size)) {
@@ -54,39 +74,39 @@ savePlink <- function(object, path = "plink_out", name = "plink_data", run_plink
     }, character(1L))
 
     writeLines(lines, con)
-    cat(sprintf(" Wrote individuals %d to %d\n", start, end))
+    message(sprintf(" Wrote individuals %d to %d", start, end))
   }
 
   close(con)
-  cat(".ped file written:", ped_file, "\n")
+  message(".ped file written: ", ped_file)
 
   ## ----- MAP file -----
-  cat("Writing .map file...\n")
+  message("Writing .map file...")
   map_file <- file.path(path, paste0(name, ".map"))
   map_out <- data.frame(
     Chromosome = map$Chromosome,
     SNP_ID = map$Name,
-    # Genetic_distance = 0,
     Position = map$Position,
     stringsAsFactors = FALSE
   )
   utils::write.table(map_out, map_file, quote = FALSE, row.names = FALSE, col.names = FALSE, sep = " ")
-  cat(".map file written:", map_file, "\n")
+  message(".map file written: ", map_file)
 
   ## ----- Optionally run PLINK -----
   if (run_plink) {
-    cat("Running PLINK to generate binary files...\n")
+    message("Running PLINK to generate binary files...")
     cmd <- paste("cd", shQuote(path), "&& plink1 --file", shQuote(name), "--map3 --out", shQuote(name), "--make-bed --noweb")
     status <- system(cmd)
 
     if (status == 0) {
-      cat("PLINK binary files created successfully.\n")
+      message("PLINK binary files created successfully.")
     } else {
-      cat("PLINK execution failed. Please check your installation and logs.\n")
+      warning("PLINK execution failed. Please check your installation and logs.")
     }
   } else {
-    cat("Skipping PLINK binary conversion as requested.\n")
+    message("Skipping PLINK binary conversion as requested.")
   }
 
-  cat("All done!\n")
+  message("All done.")
+  invisible(NULL)
 }

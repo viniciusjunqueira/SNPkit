@@ -54,21 +54,21 @@ The function only works on Linux or macOS systems.
 }
 \examples{
 \dontrun{
-# Basic unsupervised run
+# Requires the external ADMIXTURE binary and PLINK files prepared beforehand.
+work_dir <- file.path(tempdir(), "admixture_demo")
 run_admixture(
-  path = "~/projects/brangus/admixture_full_pop/",
+  path = work_dir,
   prefix = "plink_data",
-  admixture_path = "/usr/local/bin/admixture",
+  admixture_path = "admixture",
   K = 3,
   out_prefix = "run1_k3"
 )
 
-# Supervised run with population assignments and cross-validation
-pop_vec <- c("Brangus", "Brangus", "Angus", "Angus", "-", "-", "Brangus", "Angus", "Brangus", "-")
+pop_vec <- c("A", "A", "B", "B", "-", "-", "A", "B", "A", "-")
 run_admixture(
-  path = "~/projects/brangus/admixture_full_pop/",
+  path = work_dir,
   prefix = "plink_data",
-  admixture_path = "/usr/local/bin/admixture",
+  admixture_path = "admixture",
   K = 3,
   supervised = TRUE,
   pop_assignments = pop_vec,

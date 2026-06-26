@@ -15,8 +15,20 @@ if (getRversion() >= "2.15.1") {
 #' @return A data.frame with individuals as rows and SNPs as columns (numeric 0/1/2, or centered/scaled values).
 #'
 #' @examples
-#' \dontrun{
-#' df <- genoToDF(nelore_imputed, center = TRUE, scale = TRUE)
+#' \donttest{
+#' set.seed(1)
+#' raw_mat <- matrix(as.raw(sample(1:3, 100, TRUE)), nrow = 10, ncol = 10)
+#' rownames(raw_mat) <- paste0("S", 1:10)
+#' colnames(raw_mat) <- paste0("SNP", 1:10)
+#' geno <- methods::new("SnpMatrix", raw_mat)
+#' obj <- methods::new("SNPDataLong",
+#'                     geno = geno,
+#'                     map  = data.frame(Name = colnames(geno),
+#'                                       Chromosome = 1,
+#'                                       Position = 1:10),
+#'                     path = tempfile(),
+#'                     xref_path = "chip1")
+#' df <- genoToDF(obj, center = TRUE, scale = TRUE)
 #' head(df[, 1:5])
 #' }
 #' @export
@@ -43,12 +55,12 @@ genoToDF <- function(object, center = FALSE, scale = FALSE) {
   colnames(geno_df) <- colnames(object@geno)
 
   if (isTRUE(center) || isTRUE(scale) || is.numeric(center) || is.numeric(scale)) {
-    cat("Applying centering and/or scaling to SNP columns...\n")
+    message("Applying centering and/or scaling to SNP columns...")
     geno_df <- as.data.frame(scale(geno_df, center = center, scale = scale))
   }
 
-  cat("Genotype data converted to data.frame with dimensions:",
-      nrow(geno_df), "x", ncol(geno_df), "\n")
+  message("Genotype data converted to data.frame with dimensions: ",
+          nrow(geno_df), " x ", ncol(geno_df))
 
   return(geno_df)
 }
@@ -158,9 +170,11 @@ runAnticlusteringPCA <- function(object, K = 2, n_pcs = 20, center = TRUE, scale
 #' @return A ggplot object (also prints to screen).
 #'
 #' @examples
-#' \dontrun{
-#' res <- runAnticlusteringPCA(nelore_imputed, K = 2, n_pcs = 20)
-#' plotPCAgroups(res$pca, res$groups)
+#' \donttest{
+#' set.seed(1)
+#' pca_res <- stats::prcomp(matrix(rnorm(200), nrow = 20))
+#' groups <- sample(1:2, 20, replace = TRUE)
+#' plotPCAgroups(pca_res, groups)
 #' }
 #'
 #' @importFrom ggplot2 ggplot aes geom_point labs theme_minimal theme element_rect ggsave
@@ -189,9 +203,7 @@ plotPCAgroups <- function(pca_res, groups, pcs = c(1, 2), filename = NULL) {
 
   if (!is.null(filename)) {
     ggplot2::ggsave(filename, p, width = 7, height = 5, dpi = 300)
-    cat("Plot saved to:", filename, "\n")
-  } else {
-    print(p)
+    message("Plot saved to: ", filename)
   }
 
   return(p)

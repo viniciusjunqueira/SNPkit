@@ -18,6 +18,8 @@ Numeric vector: [# inconsistencies, # comparable SNPs].
 Calculates number of inconsistencies and total comparable SNPs for a parent-child pair.
 }
 \examples{
-# Used internally by check.mendelian.inconsistencies
+g1 <- c(1, 1, 3, 3, 2)
+g2 <- c(3, 1, 1, 3, 2)
+check.mendelian.inconsistencies.pair(g1, g2)
 
 }

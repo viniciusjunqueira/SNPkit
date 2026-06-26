@@ -113,7 +113,10 @@ check.identical.samples <- function(genotypes, threshold = 0) {
 #' @return List of identical sample pairs.
 #'
 #' @examples
-#' # See check.identical.samples example
+#' set.seed(1)
+#' mat <- matrix(sample(1:3, 40, TRUE), nrow = 4)
+#' rownames(mat) <- paste0("S", 1:4)
+#' check.identical.samples.by.block(mat, blcsize = 5, threshold = 0)
 #'
 #' @export
 check.identical.samples.by.block <- function(genotypes, blcsize, threshold = 0) {
@@ -123,18 +126,18 @@ check.identical.samples.by.block <- function(genotypes, blcsize, threshold = 0) 
   fin <- min(blcsize, n)
   genot.curr <- genotypes[, ini:fin]
   while (ini <= n) {
-    print(paste("Analyzing block", ini, "-", fin))
+    message("Analyzing block ", ini, "-", fin)
     pairs.c <- check.identical.samples(genot.curr, threshold)
-    if (length(pairs.c) > 0) {
-      m <- dim(pairs.c)[1]
+    if (is.data.frame(pairs.c) && nrow(pairs.c) > 0) {
+      m <- nrow(pairs.c)
       notuniquesmps <- NULL
-      for (i in 1:m) {
+      for (i in seq_len(m)) {
         notuniquesmps <- union(notuniquesmps, as.character(pairs.c[i, 1:2]))
       }
       ini <- fin + 1
       fin <- min(ini + blcsize - 1, n)
       if (ini <= n) {
-        genot.curr <- genotypes[notuniquesmps, ini:fin]
+        genot.curr <- genotypes[notuniquesmps, ini:fin, drop = FALSE]
       }
     } else {
       break
@@ -154,7 +157,12 @@ check.identical.samples.by.block <- function(genotypes, blcsize, threshold = 0) 
 #' @return Data frame summarizing inconsistencies per pair.
 #'
 #' @examples
-#' # Requires proper parent-child genotype data
+#' set.seed(1)
+#' genotypes <- matrix(sample(1:3, 30, TRUE), nrow = 3,
+#'                     dimnames = list(c("F1", "C1", "C2"), NULL))
+#' check.mendelian.inconsistencies(genotypes,
+#'                                 father = "F1",
+#'                                 child  = c("C1", "C2"))
 #'
 #' @export
 check.mendelian.inconsistencies <- function(genotypes, father, child) {
@@ -179,7 +187,7 @@ check.mendelian.inconsistencies <- function(genotypes, father, child) {
         t.inconsist <- c(t.inconsist, counts[2])
         tx.i <- counts[1] / counts[2]
         tx.inconsist <- c(tx.inconsist, tx.i)
-        print(paste(nam1, "-", nam2, "=", counts[1], counts[2], tx.i))
+        message(nam1, " - ", nam2, " = ", counts[1], " ", counts[2], " ", tx.i)
       }
     }
   }
@@ -198,7 +206,9 @@ check.mendelian.inconsistencies <- function(genotypes, father, child) {
 #' @return Numeric vector: [# inconsistencies, # comparable SNPs].
 #'
 #' @examples
-#' # Used internally by check.mendelian.inconsistencies
+#' g1 <- c(1, 1, 3, 3, 2)
+#' g2 <- c(3, 1, 1, 3, 2)
+#' check.mendelian.inconsistencies.pair(g1, g2)
 #'
 #' @export
 check.mendelian.inconsistencies.pair <- function(g1, g2) {
@@ -504,7 +514,15 @@ pairs2sets <- function(pairs) {
 #' @return List containing `pcs` (principal components) and `eigen` (eigenvalues).
 #'
 #' @examples
-#' # Requires matrix of numeric genotypes
+#' \donttest{
+#' set.seed(1)
+#' mat <- matrix(sample(as.raw(1:3), 200, TRUE), nrow = 10, ncol = 20)
+#' geno <- methods::new("SnpMatrix", mat)
+#' rownames(geno) <- paste0("S", 1:10)
+#' colnames(geno) <- paste0("SNP", 1:20)
+#' res <- doPCA(geno)
+#' str(res)
+#' }
 #'
 #' @export
 doPCA <- function(genotypes) {
@@ -512,7 +530,7 @@ doPCA <- function(genotypes) {
   evv <- eigen(xxmat, symmetric = TRUE)
   pcs <- evv$vectors
   evals <- evv$values
-  print("Eigenvalues near zero set to zero (|eigenvalue| < 1e-3)")
+  message("Eigenvalues near zero set to zero (|eigenvalue| < 1e-3)")
   evals[abs(evals) < 0.001] <- 0
   btr <- snpStats::snp.pre.multiply(genotypes, diag(1/sqrt(evals)) %*% t(pcs))
   pcs <- snpStats::snp.post.multiply(genotypes, t(btr))
@@ -535,7 +553,31 @@ doPCA <- function(genotypes) {
 #' @return NULL (plots are saved as JPEG files)
 #'
 #' @examples
-#' # Requires proper SNP and sample summary data frames
+#' \donttest{
+#' tmp <- tempfile(fileext = ".jpg")
+#' snp.summary <- data.frame(
+#'   MAF   = runif(20),
+#'   z.HWE = rnorm(20),
+#'   Calls = rep(100, 20),
+#'   P.AA  = runif(20, 0, 0.5),
+#'   P.AB  = runif(20, 0, 0.5),
+#'   P.BB  = runif(20, 0, 0.5)
+#' )
+#' sample.summary <- data.frame(
+#'   Call.rate      = runif(5, 0.9, 1),
+#'   Heterozygosity = runif(5, 0.2, 0.4),
+#'   row.names = paste0("S", 1:5)
+#' )
+#' distm <- stats::dist(matrix(rnorm(25), nrow = 5))
+#' exploratory.plots(snp.summary,
+#'                   snps.plot      = tempfile(fileext = ".jpg"),
+#'                   sample.summary = sample.summary,
+#'                   samples.plot   = tempfile(fileext = ".jpg"),
+#'                   distm          = distm,
+#'                   glabels        = paste0("S", 1:5),
+#'                   mds.plot       = tempfile(fileext = ".jpg"),
+#'                   hierq.plot     = tempfile(fileext = ".jpg"))
+#' }
 #'
 #' @importFrom grDevices jpeg dev.off
 #' @importFrom graphics par hist text plot
@@ -543,10 +585,14 @@ doPCA <- function(genotypes) {
 #' @importFrom stats hclust
 #' @export
 exploratory.plots <- function(snp.summary, snps.plot, sample.summary, samples.plot, distm, glabels, mds.plot, hierq.plot) {
-  # Helper to safely open and close JPEG devices
+  # Helper to safely open and close JPEG devices and restore par() afterwards
   safe_jpeg <- function(file, expr, ...) {
     grDevices::jpeg(file, ...)
-    on.exit(grDevices::dev.off(), add = TRUE)
+    oldpar <- graphics::par(no.readonly = TRUE)
+    on.exit({
+      graphics::par(oldpar)
+      grDevices::dev.off()
+    }, add = TRUE)
     force(expr)
   }
 
@@ -650,8 +696,7 @@ get.correl.fc <- function(g1, g2) {
 #' @export
 get.gender <- function(sample.summary, threshM, threshF) {
   if (threshM > threshF | threshM <= 0 | threshF <= 0) {
-    print("Error. Invalid thresholds.")
-    return(NULL)
+    stop("Invalid thresholds.")
   }
   h <- sample.summary$Heterozygosity
   sex <- rep("I", length(h))
@@ -726,8 +771,14 @@ get.hwe.chi2 <- function(snp.summary) {
 #' @seealso \code{\link{get.hwe.chi2}}
 #'
 #' @examples
-#' # Example usage (assuming snp.summary is precomputed and get.hwe.chi2 is defined)
-#' # snps_failed <- check.snp.hwe.chi2(snp.summary, max.dev = 0.05)
+#' snp.summary <- data.frame(
+#'   Calls = c(100, 100),
+#'   P.AA  = c(0.25, 0.7),
+#'   P.AB  = c(0.50, 0.05),
+#'   P.BB  = c(0.25, 0.25),
+#'   row.names = c("SNP1", "SNP2")
+#' )
+#' check.snp.hwe.chi2(snp.summary, max.dev = 0.05)
 #'
 #' @export
 check.snp.hwe.chi2 <- function (snp.summary, max.dev)

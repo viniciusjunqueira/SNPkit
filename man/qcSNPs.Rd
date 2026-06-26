@@ -59,21 +59,19 @@ removal of monomorphic SNPs, exclusion of specific chromosomes, optionally remov
 and optionally removing SNPs at the same genomic position (keeping the one with highest MAF).
 }
 \examples{
-\dontrun{
+\donttest{
 set.seed(123)
-mat <- matrix(sample(c(0, 1, 2, NA), 100,
-              replace = TRUE, prob = c(0.4, 0.4, 0.15, 0.05)),
-              nrow = 10, ncol = 10)
-colnames(mat) <- paste0("snp", 1:10)
-rownames(mat) <- paste0("ind", 1:10)
-map <- data.frame(Name = colnames(mat), Chromosome = 1, Position = 1:10)
-x <- new("SNPDataLong",
-         geno = mat,
-         map = map,
-         path = "dummy_path",
-         xref_path = rep("chip1", 10))
+raw_mat <- matrix(as.raw(sample(1:3, 100, TRUE)), nrow = 10, ncol = 10)
+colnames(raw_mat) <- paste0("snp", 1:10)
+rownames(raw_mat) <- paste0("ind", 1:10)
+geno <- methods::new("SnpMatrix", raw_mat)
+map <- data.frame(Name = colnames(geno), Chromosome = 1, Position = 1:10)
+x <- methods::new("SNPDataLong",
+                  geno = geno,
+                  map  = map,
+                  path = tempfile(),
+                  xref_path = "chip1")
 
-# Example using multiple filters
 qcSNPs(x,
        min_snp_cr = 0.8,
        min_maf = 0.05,

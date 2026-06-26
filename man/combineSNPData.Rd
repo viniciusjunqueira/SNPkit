@@ -20,8 +20,24 @@ have the same set of SNPs (filling missing SNPs with NA), and merges the marker 
 removing duplicate SNP entries.
 }
 \examples{
-\dontrun{
-combined <- combineSNPData(list(snp_obj1, snp_obj2, snp_obj3))
+\donttest{
+make_obj <- function(samples, snps) {
+  m <- methods::new("SnpMatrix",
+                    matrix(as.raw(1:3),
+                           nrow = length(samples),
+                           ncol = length(snps),
+                           dimnames = list(samples, snps)))
+  methods::new("SNPDataLong",
+               geno = m,
+               map  = data.frame(Name = snps,
+                                 Chromosome = 1,
+                                 Position = seq_along(snps)),
+               path = tempfile(),
+               xref_path = "chip1")
+}
+obj1 <- make_obj(c("S1", "S2"), c("SNP1", "SNP2"))
+obj2 <- make_obj(c("S3", "S4"), c("SNP2", "SNP3"))
+combined <- combineSNPData(list(obj1, obj2))
 }
 
 }

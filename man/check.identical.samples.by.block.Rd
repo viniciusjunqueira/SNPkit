@@ -20,6 +20,9 @@ List of identical sample pairs.
 Identifies identical samples within SNP blocks.
 }
 \examples{
-# See check.identical.samples example
+set.seed(1)
+mat <- matrix(sample(1:3, 40, TRUE), nrow = 4)
+rownames(mat) <- paste0("S", 1:4)
+check.identical.samples.by.block(mat, blcsize = 5, threshold = 0)
 
 }

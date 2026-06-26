@@ -22,9 +22,11 @@ A ggplot object (also prints to screen).
 Plot PCA groups from anticlustering result
 }
 \examples{
-\dontrun{
-res <- runAnticlusteringPCA(nelore_imputed, K = 2, n_pcs = 20)
-plotPCAgroups(res$pca, res$groups)
+\donttest{
+set.seed(1)
+pca_res <- stats::prcomp(matrix(rnorm(200), nrow = 20))
+groups <- sample(1:2, 20, replace = TRUE)
+plotPCAgroups(pca_res, groups)
 }
 
 }

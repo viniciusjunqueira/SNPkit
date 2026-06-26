@@ -6,9 +6,16 @@
 #'
 #' @return A single SnpMatrix object with all rows combined.
 #' @examples
-#' \dontrun{
-#' combined <- rbindSnpFlexible(brangus_geno, batch_BM@geno)
-#' }
+#' m1 <- methods::new("SnpMatrix",
+#'                    matrix(as.raw(1:3), nrow = 2, ncol = 3,
+#'                           dimnames = list(c("S1", "S2"),
+#'                                           c("SNP1", "SNP2", "SNP3"))))
+#' m2 <- methods::new("SnpMatrix",
+#'                    matrix(as.raw(1:3), nrow = 2, ncol = 2,
+#'                           dimnames = list(c("S3", "S4"),
+#'                                           c("SNP2", "SNP4"))))
+#' rbindSnpFlexible(m1, m2)
+#'
 #' @export
 rbindSnpFlexible <- function(...) {
   matrices <- list(...)

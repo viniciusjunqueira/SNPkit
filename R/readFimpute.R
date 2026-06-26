@@ -11,9 +11,15 @@ NULL
 #' @param file Character. Path to the FImpute output directory (usually "output_fimpute").
 #' @param method Character. "R" (default) for vectorized R implementation, or "Rcpp" for compiled C++ implementation.
 #'
-#' @return An object of class \code{SNPDataLong} containing the imputed genotypes and SNP map.
+#' @return An object of class \code{SNPDataLong} with three slots:
+#'   \code{geno} (a \code{SnpMatrix} with individuals as rows and SNPs as
+#'   columns), \code{map} (a \code{data.frame} with columns \code{Name},
+#'   \code{Chromosome}, and \code{Position}), and \code{path} (the input
+#'   directory).
 #' @examples
 #' \dontrun{
+#' # Requires a directory containing FImpute output files
+#' # (genotypes_imp.txt and snp_info.txt).
 #' snp_long <- read.fimpute("output_fimpute", method = "R")
 #' }
 #'
@@ -40,8 +46,8 @@ read.fimpute <- function(file, method = c("R", "Rcpp")) {
   nc <- nchar(temp_header[1, 3])
   nrows <- nrow(data.table::fread(genotype_file, select = 1, data.table = FALSE))  # cross-platform fix
 
-  cat("Number of individuals: ", nrows, "\n")
-  cat("Number of SNPs: ", nc, "\n")
+  message("Number of individuals: ", nrows)
+  message("Number of SNPs: ", nc)
 
   if (method == "R") {
     temp <- data.table::fread(genotype_file, data.table = FALSE)

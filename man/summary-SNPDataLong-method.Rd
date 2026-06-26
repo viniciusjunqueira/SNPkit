@@ -12,9 +12,23 @@
 \item{...}{Further arguments passed to methods.}
 }
 \value{
-Prints a summary to the console. Returns \code{NULL} (invisible).
+An object of class \code{summary.SNPDataLong}, which is a list with
+  the following elements:
+  \describe{
+    \item{n_individuals}{Integer. Number of individuals (rows of \code{geno}).}
+    \item{n_snps}{Integer. Number of SNPs (columns of \code{geno}).}
+    \item{n_missing}{Integer. Total number of missing genotype calls.}
+    \item{prop_missing}{Numeric. Proportion of missing genotype calls.}
+    \item{by_chromosome}{Either a table of SNP counts per chromosome (when
+       the map provides \code{Name} and \code{Chromosome}) or \code{NULL}.}
+    \item{missing_by_chromosome}{Either a table of SNPs with at least one
+       missing call per chromosome, or \code{NULL}.}
+  }
+  The object also has a dedicated \code{print} method that displays the
+  summary on the console.
 }
 \description{
-Provides a detailed summary of an \code{SNPDataLong} object, including sample and SNP counts,
-proportion of missing data, and SNP distribution by chromosome if mapping information is available.
+Provides a detailed summary of an \code{SNPDataLong} object, including sample
+and SNP counts, proportion of missing data, and SNP distribution by chromosome
+if mapping information is available.
 }

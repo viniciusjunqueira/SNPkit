@@ -27,8 +27,14 @@ indicate significant deviation beyond a specified threshold. It uses the p-value
 Any SNP with missing p-value (NA) is treated as not failing (returned as FALSE).
 }
 \examples{
-# Example usage (assuming snp.summary is precomputed and get.hwe.chi2 is defined)
-# snps_failed <- check.snp.hwe.chi2(snp.summary, max.dev = 0.05)
+snp.summary <- data.frame(
+  Calls = c(100, 100),
+  P.AA  = c(0.25, 0.7),
+  P.AB  = c(0.50, 0.05),
+  P.BB  = c(0.25, 0.25),
+  row.names = c("SNP1", "SNP2")
+)
+check.snp.hwe.chi2(snp.summary, max.dev = 0.05)
 
 }
 \seealso{
