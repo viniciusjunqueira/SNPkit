@@ -1,9 +1,3 @@
-<p align="center">
-
-<img src="man/figures/logo.png" alt="SNPkit logo" width="200"/>
-
-</p>
-
 # SNPkit
 
 `SNPkit` is an R package designed for manipulation, organization, and analysis of genotypic data, with a strong focus on integration with tools such as **FImpute** and **PLINK**.
@@ -41,6 +35,6 @@ Key pages:
 
 ## 📄 License
 
-SNPkit is licensed under the GPL-3 license. See the [LICENSE](LICENSE) file for details.
+SNPkit is licensed under the [GPL-3](https://www.gnu.org/licenses/gpl-3.0.html) license.
 
 [![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://viniciusjunqueira.github.io/SNPkit/) [![GitHub issues](https://img.shields.io/github/issues/viniciusjunqueira/SNPkit)](https://github.com/viniciusjunqueira/SNPkit/issues)
