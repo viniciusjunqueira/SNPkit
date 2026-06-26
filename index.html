@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">SNPkit</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0.9000</span>
       </span>
     </div>
 
@@ -53,6 +53,9 @@
       <a href="articles/Introduction.html">Getting started with SNPkit</a>
     </li>
   </ul>
+</li>
+<li>
+  <a href="news/index.html">Changelog</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
@@ -77,18 +80,20 @@
 <div class="section level1">
 <div class="page-header"><h1 id="snpkit">SNPkit<a class="anchor" aria-label="anchor" href="#snpkit"></a>
 </h1></div>
+<!-- badges: start -->
+
 <p><code>SNPkit</code> is an R package designed for manipulation, organization, and analysis of genotypic data, with a strong focus on integration with tools such as <strong>FImpute</strong> and <strong>PLINK</strong>.</p>
 <p>It provides robust S4-based data structures for storing genotypes and marker maps, along with functions to combine different genotype panels, summarize data, and prepare files for imputation and selection pipelines.</p>
 <hr>
 <div class="section level2">
 <h2 id="package-installation">📦 Installation<a class="anchor" aria-label="anchor" href="#package-installation"></a>
 </h2>
-<p>To install directly from GitHub, use the <code>devtools</code> package:</p>
+<p>Install the stable release from <a href="https://CRAN.R-project.org/package=SNPkit" class="external-link">CRAN</a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install devtools if not already installed</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Install SNPkit from GitHub</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"SNPkit"</span><span class="op">)</span></span></code></pre></div>
+<p>Or install the development version (latest features) from GitHub:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"viniciusjunqueira/SNPkit"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
@@ -110,7 +115,6 @@
 <h2 id="page_facing_up-license">📄 License<a class="anchor" aria-label="anchor" href="#page_facing_up-license"></a>
 </h2>
 <p>SNPkit is licensed under the <a href="https://www.gnu.org/licenses/gpl-3.0.html" class="external-link">GPL-3</a> license.</p>
-<p><a href="https://viniciusjunqueira.github.io/SNPkit/" class="external-link"><img src="https://img.shields.io/badge/docs-pkgdown-blue.svg" alt="pkgdown"></a> <a href="https://github.com/viniciusjunqueira/SNPkit/issues" class="external-link"><img src="https://img.shields.io/github/issues/viniciusjunqueira/SNPkit" alt="GitHub issues"></a></p>
 </div>
 </div>
   </div>
@@ -150,7 +154,15 @@
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://CRAN.R-project.org/package=SNPkit" class="external-link"><img src="https://www.r-pkg.org/badges/version/SNPkit" alt="CRAN status"></a></li>
+<li><a href="https://CRAN.R-project.org/package=SNPkit" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/grand-total/SNPkit" alt="CRAN downloads"></a></li>
+<li><a href="https://viniciusjunqueira.github.io/SNPkit/" class="external-link"><img src="https://img.shields.io/badge/docs-pkgdown-blue.svg" alt="pkgdown"></a></li>
+<li><a href="https://github.com/viniciusjunqueira/SNPkit/issues" class="external-link"><img src="https://img.shields.io/github/issues/viniciusjunqueira/SNPkit" alt="GitHub issues"></a></li>
+</ul>
+</div>
 
   </div>
 </div>
