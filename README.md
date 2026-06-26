@@ -1,7 +1,7 @@
 # SNPkit
 
 <!-- badges: start -->
-[![CRAN status](https://www.r-pkg.org/badges/version/SNPkit)](https://CRAN.R-project.org/package=SNPkit) [![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/SNPkit)](https://CRAN.R-project.org/package=SNPkit) [![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://viniciusjunqueira.github.io/SNPkit/) [![GitHub issues](https://img.shields.io/github/issues/viniciusjunqueira/SNPkit)](https://github.com/viniciusjunqueira/SNPkit/issues)
+[![R-CMD-check](https://github.com/viniciusjunqueira/SNPkit/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/viniciusjunqueira/SNPkit/actions/workflows/R-CMD-check.yaml) [![CRAN status](https://www.r-pkg.org/badges/version/SNPkit)](https://CRAN.R-project.org/package=SNPkit) [![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/SNPkit)](https://CRAN.R-project.org/package=SNPkit) [![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://viniciusjunqueira.github.io/SNPkit/) [![GitHub issues](https://img.shields.io/github/issues/viniciusjunqueira/SNPkit)](https://github.com/viniciusjunqueira/SNPkit/issues)
 <!-- badges: end -->
 
 `SNPkit` is an R package designed for manipulation, organization, and analysis of genotypic data, with a strong focus on integration with tools such as **FImpute** and **PLINK**.
