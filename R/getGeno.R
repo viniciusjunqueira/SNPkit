@@ -53,7 +53,8 @@ setMethod("getGeno", signature(),
             # once read.snps.long fails on a bad line it leaves the snpStats C
             # state corrupted, so a second call in the same session silently
             # skips most of the data. We therefore never let read.snps.long fail
-            # -- we clean the file first if needed.
+            # -- we repair the confidence field into a temporary file if needed.
+            # The original file on disk is never modified.
             has_conf <- !is.null(fields$confidence) && fields$confidence > 0
             cols_to_read <- unique(unlist(
               fields[c("sample", "snp", if (has_conf) "confidence")]
@@ -93,33 +94,47 @@ setMethod("getGeno", signature(),
 
             if (is.null(every)) every <- length(snp.id)
 
-            # Detect malformed data rows (confidence field missing or
-            # non-numeric; fill = TRUE above also flags structurally incomplete
-            # lines by padding them with NA). Because confidence is the highest
-            # field index snpStats reads, a valid confidence implies all
-            # lower-indexed fields are present too.
+            # Detect data rows whose confidence field cannot be parsed by
+            # read.snps.long. An empty field (two consecutive separators) makes
+            # read.snps.long abort with "Failure to read confidence score".
+            # Note that literal "NaN"/"Inf" ARE tolerated by read.snps.long
+            # (handled as no-calls), so we deliberately do NOT flag those, to
+            # avoid needlessly rewriting files that would read fine as-is.
             read_file <- orig_file
             tmp_file  <- NULL
             if (has_conf) {
               conf.col  <- match(fields$confidence, col_select)
-              bad_rows  <- which(
-                suppressWarnings(is.na(as.numeric(fread_result[[conf.col]])))
-              )
+              conf_chr  <- trimws(fread_result[[conf.col]])
+              conf_num  <- suppressWarnings(as.numeric(conf_chr))
+              tolerated <- conf_chr %in% c("NaN", "nan", "NAN",
+                                           "Inf", "-Inf", "inf", "-inf")
+              bad_rows  <- which(is.na(conf_num) & !tolerated)
               if (length(bad_rows) > 0L) {
-                message("Removing ", length(bad_rows),
-                        " malformed line(s) before reading genotypes.")
+                message("Repairing ", length(bad_rows),
+                        " line(s) with an empty/unreadable confidence score ",
+                        "(set to 0 = no call) before reading genotypes.")
                 # Data row i is at file line (skip + 1 + i): the first `skip`
                 # lines plus the column-header line precede the data.
                 bad_lines <- bad_rows + skip + 1L
                 tmp_file  <- tempfile(fileext = ".txt")
-                # Filter the RAW text and write the good lines verbatim so the
-                # exact original formatting (and thus the sample/SNP IDs) is
-                # preserved. A single blocking readLines avoids the
-                # line-splitting a chunked non-blocking read can cause.
+                # Read the raw text and, ONLY on the affected lines, set the
+                # confidence field to "0" (lowest confidence -> rejected by the
+                # threshold -> treated as a no call, exactly like the well-formed
+                # no-call rows that already carry a GC Score of 0). Every other
+                # line is written verbatim, preserving the original formatting
+                # and the sample/SNP identifiers. A single blocking readLines
+                # avoids the line-splitting a chunked non-blocking read can cause.
+                cf <- fields$confidence
                 ok <- tryCatch({
                   all_lines <- readLines(orig_file, warn = FALSE)
                   bad_lines <- bad_lines[bad_lines <= length(all_lines)]
-                  writeLines(all_lines[-bad_lines], tmp_file)
+                  fixed <- vapply(all_lines[bad_lines], function(ln) {
+                    v <- strsplit(ln, sep, fixed = TRUE)[[1]]
+                    if (length(v) >= cf) v[cf] <- "0"
+                    paste(v, collapse = sep)
+                  }, character(1), USE.NAMES = FALSE)
+                  all_lines[bad_lines] <- fixed
+                  writeLines(all_lines, tmp_file)
                   file.exists(tmp_file) && file.info(tmp_file)$size > 0L
                 }, error = function(ec) {
                   warning("Error writing preprocessed temp file: ", ec$message)

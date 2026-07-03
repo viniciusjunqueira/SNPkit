@@ -2,16 +2,18 @@
 
 ## Bug fixes
 
-* `getGeno()`: malformed lines in `FinalReport.txt` (an empty/unreadable
-  confidence field, or a structurally incomplete line with fewer fields than
-  expected) are now detected *before* reading genotypes. The initial `fread`
-  scan (with `fill = TRUE`) flags rows whose confidence value is missing or
-  non-numeric; if any are found, those lines are removed from the raw text and
-  `read.snps.long` reads a clean temporary file instead. This matters because
-  once `read.snps.long` fails on a bad line it leaves the `snpStats` C state
-  corrupted, so any retry in the same session silently skips most of the data.
-  By cleaning the file up front, `read.snps.long` is only ever called once, on
-  valid data, and all genotypes are recovered.
+* `getGeno()`: lines in `FinalReport.txt` whose confidence (GC Score) field was
+  exported empty are now handled gracefully. Such empty fields make
+  `snpStats::read.snps.long` abort with "Failure to read confidence score", and
+  once it fails it leaves the `snpStats` C state corrupted so that any retry in
+  the same session silently skips most of the data. `getGeno()` now detects
+  these rows up front (during the initial `fread` scan) and writes a temporary
+  copy in which only the affected confidence fields are set to `0` -- the lowest
+  confidence, so they are rejected by the threshold and treated as no calls,
+  exactly like the well-formed rows that already carry a GC Score of `0`. The
+  original file on disk is never modified, `read.snps.long` is called only once
+  on valid data, and no genotypes are lost. Literal `NaN`/`Inf` confidence
+  values are left untouched, since `read.snps.long` already tolerates them.
 
 * `combineSNPData()`: fixed spurious `"object has no names"` warning from
   `snpStats` when filling missing SNPs with NA. The `SnpMatrix` block is now
