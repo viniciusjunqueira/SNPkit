@@ -111,27 +111,24 @@ setMethod("getGeno", signature(),
                 tmp_file  <- tempfile(fileext = ".txt")
                 on.exit(unlink(tmp_file), add = TRUE)
 
-                # Read the full data with fill = TRUE so that short/incomplete
-                # lines are padded with NA. This lets us detect BOTH malformed
-                # confidence values and structurally incomplete lines (fewer
-                # fields than expected) in a single vectorised pass.
-                all_data <- tryCatch(
+                # Read ONLY the confidence column, with fill = TRUE so that
+                # short/incomplete lines are padded with NA. This detects BOTH
+                # malformed confidence values and structurally incomplete lines
+                # (fewer fields than expected) in a single vectorised pass,
+                # while keeping memory use low.
+                conf_df <- tryCatch(
                   data.table::fread(
                     orig_file, sep = sep, skip = skip, header = TRUE,
-                    fill = TRUE, data.table = TRUE, colClasses = "character"
+                    select = as.integer(fields$confidence), fill = TRUE,
+                    data.table = FALSE, colClasses = "character"
                   ),
                   error = function(ef) {
                     warning("fread failed during preprocessing: ", ef$message)
                     NULL
                   }
                 )
-                if (is.null(all_data) || ncol(all_data) < fields$confidence) {
-                  warning(
-                    "Cannot preprocess file: fread returned ",
-                    if (is.null(all_data)) "NULL" else ncol(all_data),
-                    " column(s) but confidence field index is ",
-                    fields$confidence, "; skipping this path."
-                  )
+                if (is.null(conf_df) || ncol(conf_df) < 1L) {
+                  warning("Cannot read confidence column; skipping this path.")
                   return(NULL)
                 }
 
@@ -139,26 +136,27 @@ setMethod("getGeno", signature(),
                 # index snpStats reads) is missing or non-numeric. Because
                 # confidence is the last field read, a valid confidence implies
                 # all lower-indexed fields are present too.
-                conf_vals <- suppressWarnings(
-                  as.numeric(all_data[[fields$confidence]])
+                bad_rows <- which(
+                  suppressWarnings(is.na(as.numeric(conf_df[[1L]])))
                 )
-                bad <- is.na(conf_vals)
-                n_bad <- sum(bad)
-                if (n_bad == 0L) {
+                if (length(bad_rows) == 0L) {
                   warning("No malformed rows detected; cannot retry.")
                   return(NULL)
                 }
-                message("Removing ", n_bad, " malformed line(s) during preprocessing.")
-                all_data <- all_data[!bad, ]
+                # Data row i corresponds to file line (skip + 1 + i): the first
+                # `skip` lines plus the column-header line precede the data.
+                bad_lines <- bad_rows + skip + 1L
+                message("Removing ", length(bad_rows),
+                        " malformed line(s) during preprocessing.")
 
-                # Rebuild the temp file with the original header block (skip
-                # lines + the column-header line) followed by the clean data.
-                header_raw <- readLines(orig_file, n = skip + 1L)
+                # Filter the RAW text and write the good lines verbatim, so the
+                # exact original formatting (and therefore the sample/SNP IDs) is
+                # preserved. A single blocking readLines avoids the line-splitting
+                # that a chunked non-blocking read can cause at buffer boundaries.
                 cleaned <- tryCatch({
-                  writeLines(header_raw, tmp_file)
-                  data.table::fwrite(all_data, file = tmp_file, sep = sep,
-                                     col.names = FALSE, quote = FALSE,
-                                     append = TRUE)
+                  all_lines <- readLines(orig_file, warn = FALSE)
+                  bad_lines <- bad_lines[bad_lines <= length(all_lines)]
+                  writeLines(all_lines[-bad_lines], tmp_file)
                   file.exists(tmp_file) && file.info(tmp_file)$size > 0L
                 }, error = function(ec) {
                   warning("Error writing preprocessed temp file: ", ec$message)

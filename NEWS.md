@@ -5,10 +5,11 @@
 * `getGeno()`: when `snpStats::read.snps.long` fails because the input file
   contains malformed lines (an empty/unreadable confidence field, or a
   structurally incomplete line with fewer fields than expected), the function
-  now re-reads the file with `data.table::fread(fill = TRUE)`, drops every row
-  whose confidence value is missing or non-numeric, writes a clean temporary
-  file, and retries `read.snps.long` on it. This recovers all valid genotypes
-  instead of returning `NULL` and skipping the whole dataset.
+  now identifies the offending line numbers with `data.table::fread(fill =
+  TRUE)`, removes just those lines from the raw text, and retries
+  `read.snps.long` on a clean temporary file. Good lines are copied verbatim,
+  preserving the exact original formatting, so all valid genotypes are
+  recovered instead of returning `NULL` and skipping the whole dataset.
 
 * `combineSNPData()`: fixed spurious `"object has no names"` warning from
   `snpStats` when filling missing SNPs with NA. The `SnpMatrix` block is now
