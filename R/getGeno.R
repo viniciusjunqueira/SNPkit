@@ -69,6 +69,21 @@ setMethod("getGeno", signature(),
             if (has_conf) req <- c(req, confidence = fields$confidence)
             sel <- as.integer(req)
 
+            # Look up each required column's ORIGINAL header name from the
+            # column-header line (the line right after `skip`). We reference
+            # fread's output by these names rather than by position, because
+            # different data.table versions return `select`ed columns either in
+            # file order or in `select` order -- referencing by the preserved
+            # header name is correct regardless.
+            header_line <- readLines(orig_file, n = skip + 1L)
+            col_names   <- strsplit(header_line[length(header_line)],
+                                    sep, fixed = TRUE)[[1]]
+            role_name <- vapply(req, function(i) col_names[i], character(1))
+            if (anyNA(role_name)) {
+              warning("Field index out of range for FinalReport columns at: ", path)
+              return(NULL)
+            }
+
             dt <- tryCatch({
               data.table::fread(
                 file = orig_file,
@@ -87,12 +102,16 @@ setMethod("getGeno", signature(),
 
             if (is.null(dt)) return(NULL)
 
-            # fread returns the selected columns in ascending file-column order,
-            # not in the order of `sel`; re-label them to their logical roles.
-            colnames(dt) <- names(req)[order(sel)]
+            # Reference columns by their original header name (robust to the
+            # order in which fread returns selected columns).
+            dt_sample <- dt[[role_name[["sample"]]]]
+            dt_snp    <- dt[[role_name[["snp"]]]]
+            dt_a1     <- dt[[role_name[["allele1"]]]]
+            dt_a2     <- dt[[role_name[["allele2"]]]]
+            dt_conf   <- if (has_conf) dt[[role_name[["confidence"]]]] else NULL
 
-            sample.id <- unique(dt$sample)
-            snp.id    <- unique(dt$snp)
+            sample.id <- unique(dt_sample)
+            snp.id    <- unique(dt_snp)
 
             if (length(sample.id) == 0) {
               warning("Sample IDs could not be determined correctly; setting default numeric row names.")
@@ -108,11 +127,11 @@ setMethod("getGeno", signature(),
             # confidence field is present, when it is below the threshold (this
             # also captures empty/unreadable confidence values, which parse to
             # NA).
-            a1 <- dt$allele1
-            a2 <- dt$allele2
+            a1 <- dt_a1
+            a2 <- dt_a2
             miss <- is.na(a1) | is.na(a2) | a1 == "-" | a2 == "-"
             if (has_conf) {
-              conf_num <- suppressWarnings(as.numeric(dt$confidence))
+              conf_num <- suppressWarnings(as.numeric(dt_conf))
               miss <- miss | is.na(conf_num) | conf_num < threshold
             }
             n2   <- (a1 == codes[2]) + (a2 == codes[2])   # count of second allele
@@ -120,8 +139,8 @@ setMethod("getGeno", signature(),
             keep <- !miss
             code[keep] <- as.raw(n2[keep] + 1L)
 
-            ri <- match(dt$sample, sample.id)
-            ci <- match(dt$snp,    snp.id)
+            ri <- match(dt_sample, sample.id)
+            ci <- match(dt_snp,    snp.id)
             geno_mat <- matrix(as.raw(0),
                                nrow = length(sample.id),
                                ncol = length(snp.id),
