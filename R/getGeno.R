@@ -83,22 +83,42 @@ setMethod("getGeno", signature(),
             if (is.null(every)) every <- length(snp.id)
 
             # Full genotype matrix
-            data <- tryCatch({
+            read_snps_long <- function(flds) {
               snpStats::read.snps.long(
-                file = file.path(path, "FinalReport.txt"),
+                file      = file.path(path, "FinalReport.txt"),
                 sample.id = sample.id,
-                snp.id = snp.id,
-                fields = fields,
-                codes = codes,
+                snp.id    = snp.id,
+                fields    = flds,
+                codes     = codes,
                 threshold = threshold,
-                sep = sep,
-                skip = skip,
-                verbose = verbose,
-                every = every
+                sep       = sep,
+                skip      = skip,
+                verbose   = verbose,
+                every     = every
               )
+            }
+
+            data <- tryCatch({
+              read_snps_long(fields)
             }, error = function(e) {
-              warning("Error while running read.snps.long: ", e$message)
-              return(NULL)
+              if (grepl("confidence", e$message, ignore.case = TRUE) &&
+                  !is.null(fields$confidence) && fields$confidence > 0) {
+                warning(
+                  "Confidence score reading failed (", e$message, "). ",
+                  "Retrying without confidence filtering (threshold ignored)."
+                )
+                fields_nc <- modifyList(fields, list(confidence = 0L))
+                tryCatch(
+                  read_snps_long(fields_nc),
+                  error = function(e2) {
+                    warning("Error while running read.snps.long: ", e2$message)
+                    NULL
+                  }
+                )
+              } else {
+                warning("Error while running read.snps.long: ", e$message)
+                NULL
+              }
             })
 
             if (is.null(data)) return(NULL)
