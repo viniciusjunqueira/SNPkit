@@ -107,35 +107,82 @@ setMethod("getGeno", signature(),
                   "Confidence score reading failed (", e$message, "). ",
                   "Removing malformed lines and retrying on a clean temporary file."
                 )
-                orig_file  <- file.path(path, "FinalReport.txt")
-                header_raw <- readLines(orig_file, n = skip + 1L)
-                all_data   <- tryCatch(
-                  data.table::fread(
-                    orig_file, sep = sep, skip = skip, header = TRUE,
-                    data.table = TRUE, colClasses = "character"
-                  ),
-                  error = function(ef) {
-                    warning("fread failed during preprocessing: ", ef$message)
-                    NULL
-                  }
-                )
-                if (is.null(all_data) || ncol(all_data) < fields$confidence) {
-                  warning(
-                    "Cannot preprocess file: fread returned ",
-                    if (is.null(all_data)) "NULL" else ncol(all_data),
-                    " column(s) but confidence field index is ", fields$confidence, "."
+                orig_file <- file.path(path, "FinalReport.txt")
+                tmp_file  <- tempfile(fileext = ".txt")
+                con_in    <- NULL
+                con_out   <- NULL
+                on.exit({
+                  if (!is.null(con_in))  try(close(con_in),  silent = TRUE)
+                  if (!is.null(con_out)) try(close(con_out), silent = TRUE)
+                  unlink(tmp_file)
+                }, add = TRUE)
+
+                # --- Strategy 1: awk (fast, no RAM overhead) ---
+                cleaned <- FALSE
+                if (nchar(Sys.which("awk")) > 0) {
+                  # Keep header lines and data lines where confidence field
+                  # starts with a digit (valid numeric GC Score).
+                  awk_prog  <- sprintf(
+                    "NR<=%d || $%d~/^[0-9]/",
+                    skip + 1L, fields$confidence
                   )
+                  exit_code <- system2(
+                    "awk",
+                    args   = c("-F\t", awk_prog, orig_file),
+                    stdout = tmp_file,
+                    stderr = FALSE
+                  )
+                  cleaned <- (exit_code == 0 &&
+                                file.exists(tmp_file) &&
+                                file.info(tmp_file)$size > 0)
+                }
+
+                # --- Strategy 2: readLines chunk fallback ---
+                if (!cleaned) {
+                  conf_df <- tryCatch(
+                    data.table::fread(
+                      orig_file, sep = sep, skip = skip, header = TRUE,
+                      select = as.integer(fields$confidence),
+                      data.table = FALSE, colClasses = "character"
+                    ),
+                    error = function(ef) {
+                      warning("fread failed reading confidence column: ", ef$message)
+                      NULL
+                    }
+                  )
+                  if (is.null(conf_df)) {
+                    warning("Cannot preprocess file; skipping this path.")
+                    return(NULL)
+                  }
+                  bad_rows  <- which(
+                    suppressWarnings(is.na(as.numeric(conf_df[[1]])))
+                  )
+                  bad_lines <- bad_rows + skip + 1L
+                  tryCatch({
+                    con_in  <- file(orig_file, "r", blocking = FALSE)
+                    con_out <- file(tmp_file, "w")
+                    lnum <- 0L
+                    repeat {
+                      ch <- readLines(con_in, n = 50000L, warn = FALSE)
+                      if (!length(ch)) break
+                      idx  <- seq_along(ch) + lnum
+                      keep <- !(idx %in% bad_lines)
+                      if (any(keep)) writeLines(ch[keep], con_out)
+                      lnum <- lnum + length(ch)
+                    }
+                    close(con_in);  con_in  <- NULL
+                    close(con_out); con_out <- NULL
+                    cleaned <- file.exists(tmp_file) && file.info(tmp_file)$size > 0
+                  }, error = function(ec) {
+                    warning("Error during file preprocessing: ", ec$message)
+                  })
+                }
+
+                if (!cleaned) {
+                  warning("Failed to create preprocessed file; skipping this path.")
                   return(NULL)
                 }
-                conf_vals <- suppressWarnings(
-                  as.numeric(all_data[[fields$confidence]])
-                )
-                all_data  <- all_data[!is.na(conf_vals)]
-                tmp_file <- tempfile(fileext = ".txt")
-                on.exit(unlink(tmp_file), add = TRUE)
-                writeLines(header_raw, tmp_file)
-                data.table::fwrite(all_data, file = tmp_file, sep = sep,
-                                   col.names = FALSE, quote = FALSE, append = TRUE)
+
                 tryCatch(
                   snpStats::read.snps.long(
                     file      = tmp_file,
