@@ -135,9 +135,10 @@ combineSNPData <- function(lista) {
 
     if (length(missing_snps) > 0) {
       message("Adding ", length(missing_snps), " missing SNPs filled with NA for one matrix...")
-      na_block <- new("SnpMatrix", matrix(as.raw(0), nrow = nrow(geno), ncol = length(missing_snps)))
-      colnames(na_block) <- missing_snps
-      rownames(na_block) <- rownames(geno)
+      na_block <- new("SnpMatrix", matrix(as.raw(0),
+                                          nrow = nrow(geno),
+                                          ncol = length(missing_snps),
+                                          dimnames = list(rownames(geno), missing_snps)))
       geno <- cbind_SnpMatrix(geno, na_block)
     }
 

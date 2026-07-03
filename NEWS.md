@@ -2,6 +2,10 @@
 
 ## Bug fixes
 
+* `combineSNPData()`: fixed spurious `"object has no names"` warning from
+  `snpStats` when filling missing SNPs with NA. The `SnpMatrix` block is now
+  constructed with `dimnames` set at creation time.
+
 * `SNPDataLong`: relaxed validation of the `xref_path` slot to accept character
   vectors of any length (one entry per individual), resolving an error in
   `import_geno_list()` when datasets contained more than one individual.
