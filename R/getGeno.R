@@ -46,17 +46,28 @@ setMethod("getGeno", signature(),
               return(NULL)
             }
 
-            # Fast initial read using fread
-            cols_to_read <- unique(unlist(fields[c("sample", "snp")]))
+            orig_file <- file.path(path, "FinalReport.txt")
+
+            # Fast initial read using fread. Include the confidence column so we
+            # can detect malformed lines BEFORE the (single) read.snps.long call:
+            # once read.snps.long fails on a bad line it leaves the snpStats C
+            # state corrupted, so a second call in the same session silently
+            # skips most of the data. We therefore never let read.snps.long fail
+            # -- we clean the file first if needed.
+            has_conf <- !is.null(fields$confidence) && fields$confidence > 0
+            cols_to_read <- unique(unlist(
+              fields[c("sample", "snp", if (has_conf) "confidence")]
+            ))
             col_select <- as.integer(cols_to_read)
 
             fread_result <- tryCatch({
               data.table::fread(
-                file = file.path(path, "FinalReport.txt"),
+                file = orig_file,
                 sep = sep,
                 skip = skip,
                 header = TRUE,
                 select = col_select,
+                fill = TRUE,
                 data.table = FALSE,
                 colClasses = "character"
               )
@@ -82,78 +93,30 @@ setMethod("getGeno", signature(),
 
             if (is.null(every)) every <- length(snp.id)
 
-            # Full genotype matrix
-            read_snps_long <- function(flds) {
-              snpStats::read.snps.long(
-                file      = file.path(path, "FinalReport.txt"),
-                sample.id = sample.id,
-                snp.id    = snp.id,
-                fields    = flds,
-                codes     = codes,
-                threshold = threshold,
-                sep       = sep,
-                skip      = skip,
-                verbose   = verbose,
-                every     = every
+            # Detect malformed data rows (confidence field missing or
+            # non-numeric; fill = TRUE above also flags structurally incomplete
+            # lines by padding them with NA). Because confidence is the highest
+            # field index snpStats reads, a valid confidence implies all
+            # lower-indexed fields are present too.
+            read_file <- orig_file
+            tmp_file  <- NULL
+            if (has_conf) {
+              conf.col  <- match(fields$confidence, col_select)
+              bad_rows  <- which(
+                suppressWarnings(is.na(as.numeric(fread_result[[conf.col]])))
               )
-            }
-
-            data <- tryCatch({
-              read_snps_long(fields)
-            }, error = function(e) {
-              if (grepl("confidence|incomplete", e$message, ignore.case = TRUE) &&
-                  !is.null(fields$confidence) && fields$confidence > 0) {
-                warning(
-                  "read.snps.long failed (", e$message, "). ",
-                  "Removing malformed lines and retrying on a clean temporary file."
-                )
-                orig_file <- file.path(path, "FinalReport.txt")
-                tmp_file  <- tempfile(fileext = ".txt")
-                on.exit(unlink(tmp_file), add = TRUE)
-
-                # Read ONLY the confidence column, with fill = TRUE so that
-                # short/incomplete lines are padded with NA. This detects BOTH
-                # malformed confidence values and structurally incomplete lines
-                # (fewer fields than expected) in a single vectorised pass,
-                # while keeping memory use low.
-                conf_df <- tryCatch(
-                  data.table::fread(
-                    orig_file, sep = sep, skip = skip, header = TRUE,
-                    select = as.integer(fields$confidence), fill = TRUE,
-                    data.table = FALSE, colClasses = "character"
-                  ),
-                  error = function(ef) {
-                    warning("fread failed during preprocessing: ", ef$message)
-                    NULL
-                  }
-                )
-                if (is.null(conf_df) || ncol(conf_df) < 1L) {
-                  warning("Cannot read confidence column; skipping this path.")
-                  return(NULL)
-                }
-
-                # A row is malformed if its confidence field (the highest field
-                # index snpStats reads) is missing or non-numeric. Because
-                # confidence is the last field read, a valid confidence implies
-                # all lower-indexed fields are present too.
-                bad_rows <- which(
-                  suppressWarnings(is.na(as.numeric(conf_df[[1L]])))
-                )
-                if (length(bad_rows) == 0L) {
-                  warning("No malformed rows detected; cannot retry.")
-                  return(NULL)
-                }
-                # Data row i corresponds to file line (skip + 1 + i): the first
-                # `skip` lines plus the column-header line precede the data.
-                bad_lines <- bad_rows + skip + 1L
+              if (length(bad_rows) > 0L) {
                 message("Removing ", length(bad_rows),
-                        " malformed line(s) during preprocessing.")
-
-                # Filter the RAW text and write the good lines verbatim, so the
-                # exact original formatting (and therefore the sample/SNP IDs) is
-                # preserved. A single blocking readLines avoids the line-splitting
-                # that a chunked non-blocking read can cause at buffer boundaries.
-                cleaned <- tryCatch({
+                        " malformed line(s) before reading genotypes.")
+                # Data row i is at file line (skip + 1 + i): the first `skip`
+                # lines plus the column-header line precede the data.
+                bad_lines <- bad_rows + skip + 1L
+                tmp_file  <- tempfile(fileext = ".txt")
+                # Filter the RAW text and write the good lines verbatim so the
+                # exact original formatting (and thus the sample/SNP IDs) is
+                # preserved. A single blocking readLines avoids the
+                # line-splitting a chunked non-blocking read can cause.
+                ok <- tryCatch({
                   all_lines <- readLines(orig_file, warn = FALSE)
                   bad_lines <- bad_lines[bad_lines <= length(all_lines)]
                   writeLines(all_lines[-bad_lines], tmp_file)
@@ -162,34 +125,33 @@ setMethod("getGeno", signature(),
                   warning("Error writing preprocessed temp file: ", ec$message)
                   FALSE
                 })
-
-                if (!cleaned) {
-                  warning("Failed to create preprocessed temp file; skipping this path.")
-                  return(NULL)
+                if (ok) {
+                  read_file <- tmp_file
+                } else {
+                  warning("Preprocessing failed; attempting to read the original file.")
+                  unlink(tmp_file); tmp_file <- NULL
                 }
-
-                tryCatch(
-                  snpStats::read.snps.long(
-                    file      = tmp_file,
-                    sample.id = sample.id,
-                    snp.id    = snp.id,
-                    fields    = fields,
-                    codes     = codes,
-                    threshold = threshold,
-                    sep       = sep,
-                    skip      = skip,
-                    verbose   = verbose,
-                    every     = every
-                  ),
-                  error = function(e2) {
-                    warning("Error while running read.snps.long: ", e2$message)
-                    NULL
-                  }
-                )
-              } else {
-                warning("Error while running read.snps.long: ", e$message)
-                NULL
               }
+            }
+            if (!is.null(tmp_file)) on.exit(unlink(tmp_file), add = TRUE)
+
+            # Full genotype matrix (single read.snps.long call on a clean file)
+            data <- tryCatch({
+              snpStats::read.snps.long(
+                file      = read_file,
+                sample.id = sample.id,
+                snp.id    = snp.id,
+                fields    = fields,
+                codes     = codes,
+                threshold = threshold,
+                sep       = sep,
+                skip      = skip,
+                verbose   = verbose,
+                every     = every
+              )
+            }, error = function(e) {
+              warning("Error while running read.snps.long: ", e$message)
+              NULL
             })
 
             if (is.null(data)) return(NULL)
