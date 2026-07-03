@@ -59,6 +59,11 @@
 
     <div class="section level2">
 <h2 class="page-header" data-toc-text="development version" id="snpkit-development-version">SNPkit (development version)<a class="anchor" aria-label="anchor" href="#snpkit-development-version"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<ul><li><p><code>SNPDataLong</code>: relaxed validation of the <code>xref_path</code> slot to accept character vectors of any length (one entry per individual), resolving an error in <code><a href="../reference/import_geno_list.html">import_geno_list()</a></code> when datasets contained more than one individual.</p></li>
+<li><p><code><a href="../reference/qcSNPs.html">qcSNPs()</a></code>: fixed a warning (<code>max</code> returning <code>-Inf</code>) and potential incorrect removal of all SNPs in a same-position group when all MAF values were <code>NA</code>. The first SNP in the group is now kept in that case.</p></li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.1.0" id="snpkit-010">SNPkit 0.1.0<small>2026-06-26</small><a class="anchor" aria-label="anchor" href="#snpkit-010"></a></h2>
