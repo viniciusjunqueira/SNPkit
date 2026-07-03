@@ -129,7 +129,12 @@ setMethod("qcSNPs", "SNPDataLong", function(x,
     if (n > 0) {
       for (i in seq_len(n)) {
         snpsum1 <- snpsum[snp_same[[i]], , drop = FALSE]
-        snp.high.maf <- rownames(snpsum1[snpsum1[, "MAF"] == max(snpsum1[, "MAF"], na.rm = TRUE), , drop = FALSE])[1]
+        maf_vals <- snpsum1[, "MAF"]
+        if (all(is.na(maf_vals))) {
+          snp.high.maf <- rownames(snpsum1)[1]
+        } else {
+          snp.high.maf <- rownames(snpsum1[maf_vals == max(maf_vals, na.rm = TRUE), , drop = FALSE])[1]
+        }
         snpstoremove <- union(snpstoremove, setdiff(rownames(snpsum1), snp.high.maf))
       }
       keep_snps <- setdiff(keep_snps, snpstoremove)
