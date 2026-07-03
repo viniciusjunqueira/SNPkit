@@ -2,20 +2,25 @@ if (getRversion() >= "2.15.1") {
   utils::globalVariables(c("Name"))
 }
 
-#' Flexible and efficient genotype file reading with autodetection using fread
+#' Flexible and efficient genotype file reading using fread
 #'
-#' Allows flexible import of SNP genotype data from Illumina FinalReport files,
-#' using fast initial column detection via \code{data.table::fread}, followed by
-#' full genotype matrix construction with \code{snpStats::read.snps.long}.
+#' Imports SNP genotype data from Illumina FinalReport files using
+#' \code{data.table::fread} and builds the \code{SnpMatrix} directly from the
+#' long-format calls. This is reliable even for very large files (millions of
+#' lines, hundreds of samples), where \code{snpStats::read.snps.long} may fail
+#' to read all samples. Empty or unreadable confidence values are treated as no
+#' calls. The original file on disk is never modified.
 #'
 #' @param path Path to the directory containing \code{FinalReport.txt}
 #' @param fields List specifying column indices (sample, snp, allele1, allele2, confidence)
-#' @param codes Allele codes (e.g., \code{c("A", "B")})
-#' @param threshold Confidence threshold
+#' @param codes Allele codes (e.g., \code{c("A", "B")}); a genotype is coded as
+#'   the count of \code{codes[2]} alleles (homozygous \code{codes[1]},
+#'   heterozygous, homozygous \code{codes[2]}).
+#' @param threshold Confidence threshold; calls below it are set to missing
 #' @param sep Field separator
 #' @param skip Lines to skip
 #' @param verbose Logical; show progress
-#' @param every Frequency for progress updates
+#' @param every Deprecated; kept for backward compatibility and ignored.
 #' @param ... Additional optional arguments.
 #'
 #' @return An \code{SNPDataLong} object
@@ -48,26 +53,29 @@ setMethod("getGeno", signature(),
 
             orig_file <- file.path(path, "FinalReport.txt")
 
-            # Fast initial read using fread. Include the confidence column so we
-            # can detect malformed lines BEFORE the (single) read.snps.long call:
-            # once read.snps.long fails on a bad line it leaves the snpStats C
-            # state corrupted, so a second call in the same session silently
-            # skips most of the data. We therefore never let read.snps.long fail
-            # -- we repair the confidence field into a temporary file if needed.
-            # The original file on disk is never modified.
+            # Read the required columns with fread and build the SnpMatrix
+            # directly. We deliberately do NOT use snpStats::read.snps.long: its
+            # internal search fails to scale to very large long-format files
+            # (millions of lines / hundreds of samples), silently reading only
+            # the first sample and reporting the rest as "not found". fread reads
+            # the file reliably regardless of size, and empty/unreadable
+            # confidence fields become NA here and are simply treated as no
+            # calls -- no temporary file or line repair is needed.
             has_conf <- !is.null(fields$confidence) && fields$confidence > 0
-            cols_to_read <- unique(unlist(
-              fields[c("sample", "snp", if (has_conf) "confidence")]
-            ))
-            col_select <- as.integer(cols_to_read)
+            req <- c(sample  = fields$sample,
+                     snp     = fields$snp,
+                     allele1 = fields$allele1,
+                     allele2 = fields$allele2)
+            if (has_conf) req <- c(req, confidence = fields$confidence)
+            sel <- as.integer(req)
 
-            fread_result <- tryCatch({
+            dt <- tryCatch({
               data.table::fread(
                 file = orig_file,
                 sep = sep,
                 skip = skip,
                 header = TRUE,
-                select = col_select,
+                select = sel,
                 fill = TRUE,
                 data.table = FALSE,
                 colClasses = "character"
@@ -77,13 +85,14 @@ setMethod("getGeno", signature(),
               return(NULL)
             })
 
-            if (is.null(fread_result)) return(NULL)
+            if (is.null(dt)) return(NULL)
 
-            sample.col <- match(fields$sample, col_select)
-            snp.col    <- match(fields$snp, col_select)
+            # fread returns the selected columns in ascending file-column order,
+            # not in the order of `sel`; re-label them to their logical roles.
+            colnames(dt) <- names(req)[order(sel)]
 
-            sample.id <- unique(fread_result[[sample.col]])
-            snp.id    <- unique(fread_result[[snp.col]])
+            sample.id <- unique(dt$sample)
+            snp.id    <- unique(dt$snp)
 
             if (length(sample.id) == 0) {
               warning("Sample IDs could not be determined correctly; setting default numeric row names.")
@@ -92,91 +101,38 @@ setMethod("getGeno", signature(),
               warning("SNP IDs could not be determined correctly; setting default numeric column names.")
             }
 
-            if (is.null(every)) every <- length(snp.id)
-
-            # Detect data rows whose confidence field cannot be parsed by
-            # read.snps.long. An empty field (two consecutive separators) makes
-            # read.snps.long abort with "Failure to read confidence score".
-            # Note that literal "NaN"/"Inf" ARE tolerated by read.snps.long
-            # (handled as no-calls), so we deliberately do NOT flag those, to
-            # avoid needlessly rewriting files that would read fine as-is.
-            read_file <- orig_file
-            tmp_file  <- NULL
+            # Encode each call into the SnpMatrix byte scheme:
+            #   0x00 = missing/no call, 0x01 = codes[1]/codes[1],
+            #   0x02 = heterozygous, 0x03 = codes[2]/codes[2].
+            # A call is missing when either allele is a no call ("-") or, when a
+            # confidence field is present, when it is below the threshold (this
+            # also captures empty/unreadable confidence values, which parse to
+            # NA).
+            a1 <- dt$allele1
+            a2 <- dt$allele2
+            miss <- is.na(a1) | is.na(a2) | a1 == "-" | a2 == "-"
             if (has_conf) {
-              conf.col  <- match(fields$confidence, col_select)
-              conf_chr  <- trimws(fread_result[[conf.col]])
-              conf_num  <- suppressWarnings(as.numeric(conf_chr))
-              tolerated <- conf_chr %in% c("NaN", "nan", "NAN",
-                                           "Inf", "-Inf", "inf", "-inf")
-              bad_rows  <- which(is.na(conf_num) & !tolerated)
-              if (length(bad_rows) > 0L) {
-                message("Repairing ", length(bad_rows),
-                        " line(s) with an empty/unreadable confidence score ",
-                        "(set to 0 = no call) before reading genotypes.")
-                # Data row i is at file line (skip + 1 + i): the first `skip`
-                # lines plus the column-header line precede the data.
-                bad_lines <- bad_rows + skip + 1L
-                tmp_file  <- tempfile(fileext = ".txt")
-                # Read the raw text and, ONLY on the affected lines, set the
-                # confidence field to "0" (lowest confidence -> rejected by the
-                # threshold -> treated as a no call, exactly like the well-formed
-                # no-call rows that already carry a GC Score of 0). Every other
-                # line is written verbatim, preserving the original formatting
-                # and the sample/SNP identifiers. A single blocking readLines
-                # avoids the line-splitting a chunked non-blocking read can cause.
-                cf <- fields$confidence
-                ok <- tryCatch({
-                  all_lines <- readLines(orig_file, warn = FALSE)
-                  bad_lines <- bad_lines[bad_lines <= length(all_lines)]
-                  fixed <- vapply(all_lines[bad_lines], function(ln) {
-                    v <- strsplit(ln, sep, fixed = TRUE)[[1]]
-                    if (length(v) >= cf) v[cf] <- "0"
-                    paste(v, collapse = sep)
-                  }, character(1), USE.NAMES = FALSE)
-                  all_lines[bad_lines] <- fixed
-                  writeLines(all_lines, tmp_file)
-                  file.exists(tmp_file) && file.info(tmp_file)$size > 0L
-                }, error = function(ec) {
-                  warning("Error writing preprocessed temp file: ", ec$message)
-                  FALSE
-                })
-                if (ok) {
-                  read_file <- tmp_file
-                } else {
-                  warning("Preprocessing failed; attempting to read the original file.")
-                  unlink(tmp_file); tmp_file <- NULL
-                }
-              }
+              conf_num <- suppressWarnings(as.numeric(dt$confidence))
+              miss <- miss | is.na(conf_num) | conf_num < threshold
             }
-            if (!is.null(tmp_file)) on.exit(unlink(tmp_file), add = TRUE)
+            n2   <- (a1 == codes[2]) + (a2 == codes[2])   # count of second allele
+            code <- raw(nrow(dt))                         # all missing (0x00)
+            keep <- !miss
+            code[keep] <- as.raw(n2[keep] + 1L)
 
-            # Full genotype matrix (single read.snps.long call on a clean file)
-            data <- tryCatch({
-              snpStats::read.snps.long(
-                file      = read_file,
-                sample.id = sample.id,
-                snp.id    = snp.id,
-                fields    = fields,
-                codes     = codes,
-                threshold = threshold,
-                sep       = sep,
-                skip      = skip,
-                verbose   = verbose,
-                every     = every
-              )
-            }, error = function(e) {
-              warning("Error while running read.snps.long: ", e$message)
-              NULL
-            })
+            ri <- match(dt$sample, sample.id)
+            ci <- match(dt$snp,    snp.id)
+            geno_mat <- matrix(as.raw(0),
+                               nrow = length(sample.id),
+                               ncol = length(snp.id),
+                               dimnames = list(sample.id, snp.id))
+            geno_mat[cbind(ri, ci)] <- code
+            data <- new("SnpMatrix", geno_mat)
 
-            if (is.null(data)) return(NULL)
-
-            # Force row and column names
-            if (is.null(rownames(data))) {
-              rownames(data) <- sample.id
-            }
-            if (is.null(colnames(data))) {
-              colnames(data) <- snp.id
+            if (verbose) {
+              message("Built SnpMatrix with ", length(sample.id),
+                      " samples x ", length(snp.id), " SNPs from ",
+                      format(nrow(dt), big.mark = ","), " calls.")
             }
 
             # Read SNP map
