@@ -109,14 +109,28 @@ setMethod("getGeno", signature(),
                 )
                 orig_file  <- file.path(path, "FinalReport.txt")
                 header_raw <- readLines(orig_file, n = skip + 1L)
-                all_data   <- data.table::fread(
-                  orig_file, sep = sep, skip = skip, header = TRUE,
-                  data.table = TRUE, colClasses = "character"
+                all_data   <- tryCatch(
+                  data.table::fread(
+                    orig_file, sep = sep, skip = skip, header = TRUE,
+                    data.table = TRUE, colClasses = "character"
+                  ),
+                  error = function(ef) {
+                    warning("fread failed during preprocessing: ", ef$message)
+                    NULL
+                  }
                 )
-                conf_col <- names(all_data)[fields$confidence]
-                all_data <- all_data[
-                  suppressWarnings(!is.na(as.numeric(all_data[[conf_col]])))
-                ]
+                if (is.null(all_data) || ncol(all_data) < fields$confidence) {
+                  warning(
+                    "Cannot preprocess file: fread returned ",
+                    if (is.null(all_data)) "NULL" else ncol(all_data),
+                    " column(s) but confidence field index is ", fields$confidence, "."
+                  )
+                  return(NULL)
+                }
+                conf_vals <- suppressWarnings(
+                  as.numeric(all_data[[fields$confidence]])
+                )
+                all_data  <- all_data[!is.na(conf_vals)]
                 tmp_file <- tempfile(fileext = ".txt")
                 on.exit(unlink(tmp_file), add = TRUE)
                 writeLines(header_raw, tmp_file)
