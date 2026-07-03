@@ -180,9 +180,12 @@ setMethod("getGeno", signature(),
               chr_name <- chr_name[1]
             }
 
-            # Select columns
+            # Select columns and normalise the chromosome column name to
+            # "Chromosome" so maps from panels using "Chr" and panels using
+            # "Chromosome" can be row-bound together in combineSNPData().
             map <- map %>%
               dplyr::select(Name, !!chr_name, Position)
+            names(map)[names(map) == chr_name] <- "Chromosome"
 
             new("SNPDataLong",
                 geno = data,

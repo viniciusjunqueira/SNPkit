@@ -2,6 +2,12 @@
 
 ## Bug fixes
 
+* `getGeno()`: the chromosome column of the returned map is now always named
+  `Chromosome` (previously it kept the original header name, which could be
+  `Chr` or `Chromosome`). This fixes a `match.names ... names do not match`
+  error in `combineSNPData()` / `import_geno_list()` when combining datasets
+  whose `SNP_Map.txt` files used different chromosome column names.
+
 * `getGeno()` now builds the `SnpMatrix` directly from the `data.table::fread`
   output instead of calling `snpStats::read.snps.long`. The latter's internal
   search does not scale to very large long-format `FinalReport.txt` files
