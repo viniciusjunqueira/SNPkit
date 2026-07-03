@@ -18,7 +18,7 @@ setClassUnion("MapDataFrameOrList", c("data.frame", "list"))
 #' @slot geno A SnpMatrix containing genotype data. Must have individuals in rows and markers in columns.
 #' @slot map A data.frame or list containing marker information. The number of markers in map should match the number of columns in geno.
 #' @slot path A character string with the file path or identifier. Must be of length 1.
-#' @slot xref_path A character string with an additional identifier or path. Must be of length 1.
+#' @slot xref_path A character vector with additional identifiers or paths. May have one entry per individual or a single value.
 #'
 #' Validity function for SNPDataLong (internal)
 #' @noRd
@@ -38,8 +38,8 @@ setClassUnion("MapDataFrameOrList", c("data.frame", "list"))
     errors <- c(errors, "Slot 'path' must be a character string of length 1.")
   }
 
-  if (length(object@xref_path) != 1 || !is.character(object@xref_path)) {
-    errors <- c(errors, "Slot 'xref_path' must be a character string of length 1.")
+  if (!is.character(object@xref_path)) {
+    errors <- c(errors, "Slot 'xref_path' must be a character vector.")
   }
 
   if (inherits(object@geno, "SnpMatrix") && (is.data.frame(object@map) || is.list(object@map))) {
