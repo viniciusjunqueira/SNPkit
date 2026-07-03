@@ -117,69 +117,59 @@ setMethod("getGeno", signature(),
                   unlink(tmp_file)
                 }, add = TRUE)
 
-                # --- Strategy 1: awk (fast, no RAM overhead) ---
-                cleaned <- FALSE
-                if (nchar(Sys.which("awk")) > 0) {
-                  # Keep header lines and data lines where confidence field
-                  # starts with a digit (valid numeric GC Score).
-                  awk_prog  <- sprintf(
-                    "NR<=%d || $%d~/^[0-9]/",
-                    skip + 1L, fields$confidence
-                  )
-                  exit_code <- system2(
-                    "awk",
-                    args   = c("-F\t", awk_prog, orig_file),
-                    stdout = tmp_file,
-                    stderr = FALSE
-                  )
-                  cleaned <- (exit_code == 0 &&
-                                file.exists(tmp_file) &&
-                                file.info(tmp_file)$size > 0)
-                }
-
-                # --- Strategy 2: readLines chunk fallback ---
-                if (!cleaned) {
-                  conf_df <- tryCatch(
-                    data.table::fread(
-                      orig_file, sep = sep, skip = skip, header = TRUE,
-                      select = as.integer(fields$confidence),
-                      data.table = FALSE, colClasses = "character"
-                    ),
-                    error = function(ef) {
-                      warning("fread failed reading confidence column: ", ef$message)
-                      NULL
-                    }
-                  )
-                  if (is.null(conf_df)) {
-                    warning("Cannot preprocess file; skipping this path.")
-                    return(NULL)
+                # Read only the confidence column to find bad rows (memory-efficient:
+                # ~1 column instead of all columns for potentially very large files).
+                conf_df <- tryCatch(
+                  data.table::fread(
+                    orig_file, sep = sep, skip = skip, header = TRUE,
+                    select     = as.integer(fields$confidence),
+                    data.table = FALSE, colClasses = "character"
+                  ),
+                  error = function(ef) {
+                    warning("fread failed reading confidence column: ", ef$message)
+                    NULL
                   }
-                  bad_rows  <- which(
-                    suppressWarnings(is.na(as.numeric(conf_df[[1]])))
-                  )
-                  bad_lines <- bad_rows + skip + 1L
-                  tryCatch({
-                    con_in  <- file(orig_file, "r", blocking = FALSE)
-                    con_out <- file(tmp_file, "w")
-                    lnum <- 0L
-                    repeat {
-                      ch <- readLines(con_in, n = 50000L, warn = FALSE)
-                      if (!length(ch)) break
-                      idx  <- seq_along(ch) + lnum
-                      keep <- !(idx %in% bad_lines)
-                      if (any(keep)) writeLines(ch[keep], con_out)
-                      lnum <- lnum + length(ch)
-                    }
-                    close(con_in);  con_in  <- NULL
-                    close(con_out); con_out <- NULL
-                    cleaned <- file.exists(tmp_file) && file.info(tmp_file)$size > 0
-                  }, error = function(ec) {
-                    warning("Error during file preprocessing: ", ec$message)
-                  })
+                )
+                if (is.null(conf_df) || ncol(conf_df) < 1L) {
+                  warning("Cannot read confidence column; skipping this path.")
+                  return(NULL)
                 }
 
+                bad_rows  <- which(
+                  suppressWarnings(is.na(as.numeric(conf_df[[1L]])))
+                )
+                if (length(bad_rows) == 0L) {
+                  warning("No non-numeric confidence rows found; cannot retry.")
+                  return(NULL)
+                }
+                # skip lines + column-header line = skip + 1; data row i is at
+                # file line (skip + 1 + i).
+                bad_lines <- bad_rows + skip + 1L
+
+                # Copy the file to tmp_file in chunks, dropping bad lines.
+                # This never loads the full file into memory.
+                cleaned <- tryCatch({
+                  con_in  <- file(orig_file, "r", blocking = FALSE)
+                  con_out <- file(tmp_file,  "w")
+                  lnum    <- 0L
+                  repeat {
+                    ch <- readLines(con_in, n = 50000L, warn = FALSE)
+                    if (!length(ch)) break
+                    idx  <- seq_along(ch) + lnum
+                    keep <- !(idx %in% bad_lines)
+                    if (any(keep)) writeLines(ch[keep], con_out)
+                    lnum <- lnum + length(ch)
+                  }
+                  close(con_in);  con_in  <- NULL
+                  close(con_out); con_out <- NULL
+                  file.exists(tmp_file) && file.info(tmp_file)$size > 0L
+                }, error = function(ec) {
+                  warning("Error copying file to temp: ", ec$message)
+                  FALSE
+                })
+
                 if (!cleaned) {
-                  warning("Failed to create preprocessed file; skipping this path.")
+                  warning("Failed to create preprocessed temp file; skipping this path.")
                   return(NULL)
                 }
 
