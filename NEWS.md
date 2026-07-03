@@ -3,10 +3,12 @@
 ## Bug fixes
 
 * `getGeno()`: when `snpStats::read.snps.long` fails with a confidence score
-  reading error (e.g. malformed lines in the input file), the function now
-  automatically retries without confidence filtering instead of returning
-  `NULL`. A warning is emitted to inform the user that the threshold was
-  not applied.
+  reading error (e.g. a malformed line with an empty confidence field), the
+  function now removes the offending lines via `fread`, writes a clean
+  temporary file, and retries `read.snps.long` on that file. The previous
+  retry with `confidence = 0` was unreliable due to persistent internal state
+  in `snpStats` after a failed call, causing most genotypes to be silently
+  lost.
 
 * `combineSNPData()`: fixed spurious `"object has no names"` warning from
   `snpStats` when filling missing SNPs with NA. The `SnpMatrix` block is now

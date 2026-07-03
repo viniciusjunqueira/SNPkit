@@ -105,11 +105,36 @@ setMethod("getGeno", signature(),
                   !is.null(fields$confidence) && fields$confidence > 0) {
                 warning(
                   "Confidence score reading failed (", e$message, "). ",
-                  "Retrying without confidence filtering (threshold ignored)."
+                  "Removing malformed lines and retrying on a clean temporary file."
                 )
-                fields_nc <- modifyList(fields, list(confidence = 0L))
+                orig_file  <- file.path(path, "FinalReport.txt")
+                header_raw <- readLines(orig_file, n = skip + 1L)
+                all_data   <- data.table::fread(
+                  orig_file, sep = sep, skip = skip, header = TRUE,
+                  data.table = TRUE, colClasses = "character"
+                )
+                conf_col <- names(all_data)[fields$confidence]
+                all_data <- all_data[
+                  suppressWarnings(!is.na(as.numeric(all_data[[conf_col]])))
+                ]
+                tmp_file <- tempfile(fileext = ".txt")
+                on.exit(unlink(tmp_file), add = TRUE)
+                writeLines(header_raw, tmp_file)
+                data.table::fwrite(all_data, file = tmp_file, sep = sep,
+                                   col.names = FALSE, quote = FALSE, append = TRUE)
                 tryCatch(
-                  read_snps_long(fields_nc),
+                  snpStats::read.snps.long(
+                    file      = tmp_file,
+                    sample.id = sample.id,
+                    snp.id    = snp.id,
+                    fields    = fields,
+                    codes     = codes,
+                    threshold = threshold,
+                    sep       = sep,
+                    skip      = skip,
+                    verbose   = verbose,
+                    every     = every
+                  ),
                   error = function(e2) {
                     warning("Error while running read.snps.long: ", e2$message)
                     NULL
