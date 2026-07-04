@@ -146,7 +146,7 @@ runAnticlusteringPCA <- function(object, K = 2, n_pcs = 20, center = TRUE, scale
   message("Running anticlustering with K = ",
           if (length(K) == 1) K else paste(K, collapse = ", "), " ...")
   groups <- anticlust::anticlustering(
-    features = top_pcs,
+    x = top_pcs,
     K = K,
     standardize = TRUE
   )
