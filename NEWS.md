@@ -1,5 +1,16 @@
 # SNPkit 0.1.1
 
+## Performance
+
+* `runAnticlusteringPCA()` is now dramatically faster and lighter on memory for
+  wide genotype data. When there are more SNPs than individuals (the usual
+  case), PCA is computed from the small n x n Gram matrix instead of a full SVD
+  on the n x p matrix, avoiding the construction of the huge p x n rotation
+  matrix (which could be several GB and was never used). The genotype matrix is
+  also no longer converted to a `data.frame` before PCA. Scores and standard
+  deviations are unchanged. `runAnticlusteringPCA()` no longer uses
+  `anticlust`'s removed `features` argument.
+
 ## Bug fixes
 
 * `getGeno()`: the chromosome column of the returned map is now always named

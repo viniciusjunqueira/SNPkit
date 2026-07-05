@@ -32,7 +32,11 @@ if (getRversion() >= "2.15.1") {
 #' head(df[, 1:5])
 #' }
 #' @export
-genoToDF <- function(object, center = FALSE, scale = FALSE) {
+# Internal: build the (optionally centered/scaled) numeric genotype matrix,
+# dropping monomorphic SNPs. Kept as a matrix -- never a data.frame -- because
+# for wide genotype data (hundreds of thousands of SNPs) data.frame operations
+# are far slower and use much more memory.
+.scaledGenoMatrix <- function(object, center = FALSE, scale = FALSE) {
   if (!inherits(object, "SNPDataLong")) {
     stop("Input object must be of class SNPDataLong.")
   }
@@ -49,15 +53,25 @@ genoToDF <- function(object, center = FALSE, scale = FALSE) {
   }
 
   geno_matrix <- as(object@geno, "numeric")
-  geno_df <- as.data.frame(geno_matrix)
-
-  rownames(geno_df) <- rownames(object@geno)
-  colnames(geno_df) <- colnames(object@geno)
+  rownames(geno_matrix) <- rownames(object@geno)
+  colnames(geno_matrix) <- colnames(object@geno)
 
   if (isTRUE(center) || isTRUE(scale) || is.numeric(center) || is.numeric(scale)) {
     message("Applying centering and/or scaling to SNP columns...")
-    geno_df <- as.data.frame(scale(geno_df, center = center, scale = scale))
+    geno_matrix <- scale(geno_matrix, center = center, scale = scale)
+    attr(geno_matrix, "scaled:center") <- NULL
+    attr(geno_matrix, "scaled:scale") <- NULL
   }
+
+  message("Genotype matrix prepared with dimensions: ",
+          nrow(geno_matrix), " x ", ncol(geno_matrix))
+
+  geno_matrix
+}
+
+genoToDF <- function(object, center = FALSE, scale = FALSE) {
+  geno_matrix <- .scaledGenoMatrix(object, center = center, scale = scale)
+  geno_df <- as.data.frame(geno_matrix)
 
   message("Genotype data converted to data.frame with dimensions: ",
           nrow(geno_df), " x ", ncol(geno_df))
@@ -102,12 +116,37 @@ runAnticlusteringPCA <- function(object, K = 2, n_pcs = 20, center = TRUE, scale
     stop("Input object must be of class SNPDataLong.")
   }
 
-  geno_df <- genoToDF(object, center = center, scale = scale)
-  message("Genotype data frame created for PCA.")
+  geno_mat <- .scaledGenoMatrix(object, center = center, scale = scale)
+  message("Genotype matrix ready for PCA.")
+
+  n <- nrow(geno_mat)
+  p <- ncol(geno_mat)
 
   message("Running PCA...")
-  # genoToDF already applied centering/scaling, so keep prcomp(center=FALSE, scale.=FALSE)
-  pca_res <- stats::prcomp(geno_df, center = FALSE, scale. = FALSE)
+  # centering/scaling was already applied above, so no further centering here.
+  if (p > n) {
+    # Efficient PCA for wide data (more SNPs than individuals): decompose the
+    # small n x n Gram matrix instead of running a full SVD on the n x p matrix.
+    # This is mathematically identical for the scores/sdev but avoids computing
+    # and storing the huge p x n rotation matrix, which dominates time and RAM.
+    message("Using Gram-matrix PCA (p = ", p, " > n = ", n, ").")
+    gram <- tcrossprod(geno_mat)                 # n x n
+    eig  <- eigen(gram, symmetric = TRUE)
+    ev   <- pmax(eig$values, 0)                  # guard tiny negatives
+    sdev <- sqrt(ev / max(1L, n - 1L))
+    scores <- sweep(eig$vectors, 2, sqrt(ev), `*`)  # U %*% diag(D) = prcomp$x
+    rownames(scores) <- rownames(geno_mat)
+    colnames(scores) <- paste0("PC", seq_len(ncol(scores)))
+    # Mimic a prcomp object (rotation is intentionally omitted: it is the huge
+    # p x n matrix we are avoiding, and is not used downstream).
+    pca_res <- structure(
+      list(sdev = sdev, rotation = NULL, center = FALSE, scale = FALSE,
+           x = scores),
+      class = "prcomp"
+    )
+  } else {
+    pca_res <- stats::prcomp(geno_mat, center = FALSE, scale. = FALSE)
+  }
 
   # Determine number of PCs to use
   var_explained <- pca_res$sdev^2
