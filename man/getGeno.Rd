@@ -3,7 +3,7 @@
 \name{getGeno}
 \alias{getGeno}
 \alias{getGeno,ANY-method}
-\title{Flexible and efficient genotype file reading with autodetection using fread}
+\title{Flexible and efficient genotype file reading using fread}
 \usage{
 getGeno(...)
 
@@ -25,9 +25,11 @@ getGeno(...)
 
 \item{fields}{List specifying column indices (sample, snp, allele1, allele2, confidence)}
 
-\item{codes}{Allele codes (e.g., \code{c("A", "B")})}
+\item{codes}{Allele codes (e.g., \code{c("A", "B")}); a genotype is coded as
+the count of \code{codes[2]} alleles (homozygous \code{codes[1]},
+heterozygous, homozygous \code{codes[2]}).}
 
-\item{threshold}{Confidence threshold}
+\item{threshold}{Confidence threshold; calls below it are set to missing}
 
 \item{sep}{Field separator}
 
@@ -35,13 +37,16 @@ getGeno(...)
 
 \item{verbose}{Logical; show progress}
 
-\item{every}{Frequency for progress updates}
+\item{every}{Deprecated; kept for backward compatibility and ignored.}
 }
 \value{
 An \code{SNPDataLong} object
 }
 \description{
-Allows flexible import of SNP genotype data from Illumina FinalReport files,
-using fast initial column detection via \code{data.table::fread}, followed by
-full genotype matrix construction with \code{snpStats::read.snps.long}.
+Imports SNP genotype data from Illumina FinalReport files using
+\code{data.table::fread} and builds the \code{SnpMatrix} directly from the
+long-format calls. This is reliable even for very large files (millions of
+lines, hundreds of samples), where \code{snpStats::read.snps.long} may fail
+to read all samples. Empty or unreadable confidence values are treated as no
+calls. The original file on disk is never modified.
 }

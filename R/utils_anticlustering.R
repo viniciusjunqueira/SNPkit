@@ -3,39 +3,11 @@ if (getRversion() >= "2.15.1") {
 }
 
 
-#' Convert geno slot from SNPDataLong to a data.frame
-#'
-#' Converts the genotype matrix (geno slot) of a SNPDataLong object to a data.frame,
-#' with optional centering and scaling per SNP (column).
-#'
-#' @param object An object of class SNPDataLong.
-#' @param center Logical or numeric. If TRUE (default FALSE), center columns to mean zero.
-#' @param scale Logical or numeric. If TRUE (default FALSE), scale columns to standard deviation one.
-#'
-#' @return A data.frame with individuals as rows and SNPs as columns (numeric 0/1/2, or centered/scaled values).
-#'
-#' @examples
-#' \donttest{
-#' set.seed(1)
-#' raw_mat <- matrix(as.raw(sample(1:3, 100, TRUE)), nrow = 10, ncol = 10)
-#' rownames(raw_mat) <- paste0("S", 1:10)
-#' colnames(raw_mat) <- paste0("SNP", 1:10)
-#' geno <- methods::new("SnpMatrix", raw_mat)
-#' obj <- methods::new("SNPDataLong",
-#'                     geno = geno,
-#'                     map  = data.frame(Name = colnames(geno),
-#'                                       Chromosome = 1,
-#'                                       Position = 1:10),
-#'                     path = tempfile(),
-#'                     xref_path = "chip1")
-#' df <- genoToDF(obj, center = TRUE, scale = TRUE)
-#' head(df[, 1:5])
-#' }
-#' @export
 # Internal: build the (optionally centered/scaled) numeric genotype matrix,
 # dropping monomorphic SNPs. Kept as a matrix -- never a data.frame -- because
 # for wide genotype data (hundreds of thousands of SNPs) data.frame operations
 # are far slower and use much more memory.
+#' @noRd
 .scaledGenoMatrix <- function(object, center = FALSE, scale = FALSE) {
   if (!inherits(object, "SNPDataLong")) {
     stop("Input object must be of class SNPDataLong.")
@@ -69,6 +41,35 @@ if (getRversion() >= "2.15.1") {
   geno_matrix
 }
 
+#' Convert geno slot from SNPDataLong to a data.frame
+#'
+#' Converts the genotype matrix (geno slot) of a SNPDataLong object to a data.frame,
+#' with optional centering and scaling per SNP (column).
+#'
+#' @param object An object of class SNPDataLong.
+#' @param center Logical or numeric. If TRUE (default FALSE), center columns to mean zero.
+#' @param scale Logical or numeric. If TRUE (default FALSE), scale columns to standard deviation one.
+#'
+#' @return A data.frame with individuals as rows and SNPs as columns (numeric 0/1/2, or centered/scaled values).
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' raw_mat <- matrix(as.raw(sample(1:3, 100, TRUE)), nrow = 10, ncol = 10)
+#' rownames(raw_mat) <- paste0("S", 1:10)
+#' colnames(raw_mat) <- paste0("SNP", 1:10)
+#' geno <- methods::new("SnpMatrix", raw_mat)
+#' obj <- methods::new("SNPDataLong",
+#'                     geno = geno,
+#'                     map  = data.frame(Name = colnames(geno),
+#'                                       Chromosome = 1,
+#'                                       Position = 1:10),
+#'                     path = tempfile(),
+#'                     xref_path = "chip1")
+#' df <- genoToDF(obj, center = TRUE, scale = TRUE)
+#' head(df[, 1:5])
+#' }
+#' @export
 genoToDF <- function(object, center = FALSE, scale = FALSE) {
   geno_matrix <- .scaledGenoMatrix(object, center = center, scale = scale)
   geno_df <- as.data.frame(geno_matrix)
