@@ -53,7 +53,8 @@ LinkingTo:
     Rcpp
 Suggests:
     knitr,
-    rmarkdown
+    rmarkdown,
+    RSpectra
 VignetteBuilder: knitr
 Encoding: UTF-8
 License: GPL-3

@@ -11,6 +11,18 @@
   deviations are unchanged. `runAnticlusteringPCA()` no longer uses
   `anticlust`'s removed `features` argument.
 
+* `runAnticlusteringPCA()`: when a fixed number of PCs is requested and the
+  optional `RSpectra` package is installed, only the top `n_pcs` components are
+  computed with a matrix-free solver, so the n x n Gram matrix is never formed
+  at all. This is the dominant remaining cost for very wide data. Falls back to
+  the Gram-matrix `eigen` decomposition when `RSpectra` is absent or a
+  proportion of variance is requested (`n_pcs < 1`).
+
+* `runAnticlusteringPCA()` gains an `anticlust_method` argument. The default
+  `"exchange"` preserves current behaviour; `"fast"` uses
+  `anticlust::fast_anticlustering`, which scales to large numbers of
+  individuals.
+
 ## Bug fixes
 
 * `getGeno()`: the chromosome column of the returned map is now always named
