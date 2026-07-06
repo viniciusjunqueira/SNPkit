@@ -8,11 +8,25 @@
 
 It provides robust S4-based data structures for storing genotypes and marker maps, along with functions to combine different genotype panels, summarize data, and prepare files for imputation and selection pipelines.
 
+Key capabilities:
+
+-   Import Illumina `FinalReport.txt` files (any panel density) and merge multiple genotype panels into a single object.
+-   Quality control on SNPs and samples (call rate, MAF, HWE, monomorphic, duplicated positions, chromosome filters).
+-   Prepare and run **FImpute** imputation and export to **PLINK**.
+-   PCA and anticlustering utilities for building balanced groups (e.g. batch design).
+
 ------------------------------------------------------------------------
 
 ## 📦 Installation
 
-Install the stable release from [CRAN](https://CRAN.R-project.org/package=SNPkit):
+`SNPkit` depends on [`snpStats`](https://bioconductor.org/packages/snpStats/), which is distributed through **Bioconductor**. Install it first:
+
+``` r
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install("snpStats")
+```
+
+Then install the stable release from [CRAN](https://CRAN.R-project.org/package=SNPkit):
 
 ``` r
 install.packages("SNPkit")
@@ -21,8 +35,27 @@ install.packages("SNPkit")
 Or install the development version (latest features) from GitHub:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("viniciusjunqueira/SNPkit")
+# install.packages("remotes")
+remotes::install_github("viniciusjunqueira/SNPkit")
+```
+
+### Optional: faster PCA
+
+`runAnticlusteringPCA()` can use [`RSpectra`](https://CRAN.R-project.org/package=RSpectra) for a much faster, low-memory truncated PCA on wide genotype data. It is optional — install it to enable the fast path:
+
+``` r
+install.packages("RSpectra")
+```
+
+### Installing behind a firewall / offline server
+
+If the target machine cannot reach GitHub (e.g. a proxy returns HTTP 403), build a source tarball locally and copy it over:
+
+``` bash
+R CMD build SNPkit                 # produces SNPkit_x.y.z.tar.gz
+scp SNPkit_x.y.z.tar.gz user@server:~/
+# on the server:
+R CMD INSTALL SNPkit_x.y.z.tar.gz
 ```
 
 ------------------------------------------------------------------------
