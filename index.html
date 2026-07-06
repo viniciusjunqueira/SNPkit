@@ -84,18 +84,45 @@
 
 <p><code>SNPkit</code> is an R package designed for manipulation, organization, and analysis of genotypic data, with a strong focus on integration with tools such as <strong>FImpute</strong> and <strong>PLINK</strong>.</p>
 <p>It provides robust S4-based data structures for storing genotypes and marker maps, along with functions to combine different genotype panels, summarize data, and prepare files for imputation and selection pipelines.</p>
+<p>Key capabilities:</p>
+<ul>
+<li>Import Illumina <code>FinalReport.txt</code> files (any panel density) and merge multiple genotype panels into a single object.</li>
+<li>Quality control on SNPs and samples (call rate, MAF, HWE, monomorphic, duplicated positions, chromosome filters).</li>
+<li>Prepare and run <strong>FImpute</strong> imputation and export to <strong>PLINK</strong>.</li>
+<li>PCA and anticlustering utilities for building balanced groups (e.g. batch design).</li>
+</ul>
 <hr>
 <div class="section level2">
 <h2 id="package-installation">📦 Installation<a class="anchor" aria-label="anchor" href="#package-installation"></a>
 </h2>
-<p>Install the stable release from <a href="https://CRAN.R-project.org/package=SNPkit" class="external-link">CRAN</a>:</p>
+<p><code>SNPkit</code> depends on <a href="https://bioconductor.org/packages/snpStats/" class="external-link"><code>snpStats</code></a>, which is distributed through <strong>Bioconductor</strong>. Install it first:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"BiocManager"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
+<span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"snpStats"</span><span class="op">)</span></span></code></pre></div>
+<p>Then install the stable release from <a href="https://CRAN.R-project.org/package=SNPkit" class="external-link">CRAN</a>:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"SNPkit"</span><span class="op">)</span></span></code></pre></div>
 <p>Or install the development version (latest features) from GitHub:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"viniciusjunqueira/SNPkit"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"viniciusjunqueira/SNPkit"</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="optional-faster-pca">Optional: faster PCA<a class="anchor" aria-label="anchor" href="#optional-faster-pca"></a>
+</h3>
+<p><code><a href="reference/runAnticlusteringPCA.html">runAnticlusteringPCA()</a></code> can use <a href="https://CRAN.R-project.org/package=RSpectra" class="external-link"><code>RSpectra</code></a> for a much faster, low-memory truncated PCA on wide genotype data. It is optional — install it to enable the fast path:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"RSpectra"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="installing-behind-a-firewall--offline-server">Installing behind a firewall / offline server<a class="anchor" aria-label="anchor" href="#installing-behind-a-firewall--offline-server"></a>
+</h3>
+<p>If the target machine cannot reach GitHub (e.g. a proxy returns HTTP 403), build a source tarball locally and copy it over:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="ex">R</span> CMD build SNPkit                 <span class="co"># produces SNPkit_x.y.z.tar.gz</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">scp</span> SNPkit_x.y.z.tar.gz user@server:~/</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># on the server:</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL SNPkit_x.y.z.tar.gz</span></code></pre></div>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="open_book-documentation">📖 Documentation<a class="anchor" aria-label="anchor" href="#open_book-documentation"></a>
