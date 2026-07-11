@@ -80,65 +80,53 @@ genoToDF <- function(object, center = FALSE, scale = FALSE) {
   return(geno_df)
 }
 
-#' Run PCA and anticlustering on SNPDataLong
+#' Run PCA on a SNPDataLong object
 #'
-#' Builds the (optionally centered/scaled) genotype matrix, runs PCA, and
-#' performs anticlustering on the selected principal components. For wide data
-#' (more SNPs than individuals) PCA is computed efficiently from the genotype
-#' matrix without forming the large rotation matrix; when a fixed number of PCs
-#' is requested and \pkg{RSpectra} is installed, only the top PCs are computed
-#' with a matrix-free solver for maximum speed.
+#' Computes principal components of the (optionally centered/scaled) genotype
+#' matrix, without any clustering. For wide data (more SNPs than individuals)
+#' the PCA is obtained from the n x n Gram matrix, so the large rotation matrix
+#' is never formed; when a fixed number of PCs is requested and \pkg{RSpectra}
+#' is installed, only the top PCs are computed with a matrix-free solver. This
+#' is the same PCA engine used by \code{\link{runAnticlusteringPCA}}, so the
+#' scores are directly comparable.
 #'
 #' @param object An object of class \code{SNPDataLong}.
-#' @param K Number of groups for anticlustering, or a vector of group sizes
-#'   (as in \pkg{anticlust}).
-#' @param n_pcs Number of top principal components to use. If \code{< 1},
-#'   it is interpreted as the proportion of variance to be explained (e.g.,
-#'   \code{0.8} means PCs explaining at least 80\% variance). The fast
-#'   matrix-free PCA path is only used when a fixed number (\code{>= 1}) is
-#'   requested.
+#' @param n_pcs Number of principal components to return. \code{NULL} (default)
+#'   returns all PCs; a value \code{>= 1} returns that many and enables the fast
+#'   \pkg{RSpectra} path; a value \code{< 1} is the proportion of variance to
+#'   reach (e.g. \code{0.98}).
 #' @param center Logical or numeric. Passed to \code{\link[base]{scale}}.
 #'   If \code{TRUE}, center columns; if numeric, a vector of column means.
 #'   Default: \code{TRUE}.
 #' @param scale Logical or numeric. Passed to \code{\link[base]{scale}}.
 #'   If \code{TRUE}, scale to unit variance; if numeric, a vector of column sds.
 #'   Default: \code{TRUE}.
-#' @param anticlust_method Which \pkg{anticlust} optimiser to use.
-#'   \code{"exchange"} (default) calls \code{anticlust::anticlustering} and
-#'   preserves previous results. \code{"fast"} calls
-#'   \code{anticlust::fast_anticlustering}, which scales to large numbers of
-#'   individuals via a k-means objective and may return different assignments.
 #'
 #' @returns
 #' A list with components:
 #' \describe{
-#'   \item{groups}{Integer vector with anticlustering group assignments.}
-#'   \item{pca}{The PCA result object (a \code{prcomp}-like list). For the
-#'     wide-data paths, \code{rotation} is \code{NULL} and an extra
-#'     \code{totvar} element holds the total column variance.}
-#'   \item{pcs}{Numeric matrix of the PCs used for anticlustering.}
+#'   \item{pca}{A \code{prcomp}-like object: \code{sdev}, \code{x} (scores) and
+#'     \code{totvar} (total column variance). \code{rotation} is \code{NULL} for
+#'     the wide-data paths.}
+#'   \item{pcs}{Numeric matrix with the selected top principal components.}
 #' }
 #'
-#' @examplesIf requireNamespace("anticlust", quietly = TRUE) && exists("nelore_imputed")
-#' res <- runAnticlusteringPCA(nelore_imputed, K = 2, n_pcs = 0.8)
-#' table(res$groups)
+#' @examplesIf exists("nelore_imputed")
+#' pr <- runPCA(nelore_imputed, n_pcs = 10)
+#' head(pr$pcs[, 1:2])
 #'
 #' @export
 #' @importFrom stats prcomp
-runAnticlusteringPCA <- function(object, K = 2, n_pcs = 20, center = TRUE,
-                                 scale = TRUE,
-                                 anticlust_method = c("exchange", "fast")) {
+runPCA <- function(object, n_pcs = NULL, center = TRUE, scale = TRUE) {
   if (!inherits(object, "SNPDataLong")) {
     stop("Input object must be of class SNPDataLong.")
   }
-  anticlust_method <- match.arg(anticlust_method)
-
-  if (!is.numeric(n_pcs) || length(n_pcs) != 1L || is.na(n_pcs)) {
-    stop("`n_pcs` must be a single numeric value.")
+  if (!is.null(n_pcs) &&
+      (!is.numeric(n_pcs) || length(n_pcs) != 1L || is.na(n_pcs))) {
+    stop("`n_pcs` must be NULL or a single numeric value.")
   }
 
   geno_mat <- .scaledGenoMatrix(object, center = center, scale = scale)
-  message("Genotype matrix ready for PCA.")
 
   n <- nrow(geno_mat)
   p <- ncol(geno_mat)
@@ -152,11 +140,9 @@ runAnticlusteringPCA <- function(object, K = 2, n_pcs = 20, center = TRUE,
     #
     # Fast path: when a fixed number of PCs is requested and RSpectra is
     # available, compute ONLY the top n_pcs eigenpairs with a matrix-free
-    # operator v -> X (X^T v). This avoids materialising the n x n Gram matrix
-    # (the dominant tcrossprod cost) entirely. Total variance for correct
-    # variance-explained percentages is the trace of the Gram matrix,
-    # sum(X^2), obtained without forming it.
-    use_rspectra <- n_pcs >= 1 &&
+    # operator v -> X (X^T v), avoiding the n x n Gram matrix entirely.
+    fixed_k <- !is.null(n_pcs) && n_pcs >= 1
+    use_rspectra <- fixed_k &&
       requireNamespace("RSpectra", quietly = TRUE) &&
       as.integer(n_pcs) <= (n - 2L)
 
@@ -165,11 +151,11 @@ runAnticlusteringPCA <- function(object, K = 2, n_pcs = 20, center = TRUE,
     if (use_rspectra) {
       message("Using matrix-free truncated PCA via RSpectra (top ",
               as.integer(n_pcs), " PCs; p = ", p, " > n = ", n, ").")
-      k   <- as.integer(n_pcs)
+      k    <- as.integer(n_pcs)
       Afun <- function(v, args) args %*% crossprod(args, v)  # X (X^T v)
-      eig <- RSpectra::eigs_sym(Afun, k = k, n = n, which = "LM",
-                                args = geno_mat)
-      ev  <- pmax(eig$values, 0)
+      eig  <- RSpectra::eigs_sym(Afun, k = k, n = n, which = "LM",
+                                 args = geno_mat)
+      ev     <- pmax(eig$values, 0)
       sdev   <- sqrt(ev / max(1L, n - 1L))
       scores <- sweep(eig$vectors, 2, sqrt(ev), `*`)
     } else {
@@ -183,10 +169,8 @@ runAnticlusteringPCA <- function(object, K = 2, n_pcs = 20, center = TRUE,
 
     rownames(scores) <- rownames(geno_mat)
     colnames(scores) <- paste0("PC", seq_len(ncol(scores)))
-    # Mimic a prcomp object (rotation is intentionally omitted: it is the huge
-    # p x n matrix we are avoiding, and is not used downstream). `totvar` is the
-    # total column variance, used so variance-explained percentages remain
-    # correct even when `sdev` holds only the top-k values.
+    # Mimic a prcomp object (rotation intentionally omitted). `totvar` keeps
+    # variance-explained percentages correct even with only top-k sdev values.
     pca_res <- structure(
       list(sdev = sdev, rotation = NULL, center = FALSE, scale = FALSE,
            x = scores, totvar = totvar),
@@ -197,31 +181,78 @@ runAnticlusteringPCA <- function(object, K = 2, n_pcs = 20, center = TRUE,
     pca_res$totvar <- sum(pca_res$sdev^2)
   }
 
-  # Determine number of PCs to use. Percentages/cumulative variance use the
-  # total column variance (pca_res$totvar) as denominator so they stay correct
-  # even when only the top-k sdev values are available (RSpectra path).
-  var_explained <- pca_res$sdev^2 / pca_res$totvar
-  cum_var <- cumsum(var_explained)
-
-  if (n_pcs < 1) {
+  # Number of PCs to return. Denominator is the total column variance so
+  # percentages stay correct even when only top-k sdev values are available.
+  cum_var <- cumsum(pca_res$sdev^2 / pca_res$totvar)
+  if (is.null(n_pcs)) {
+    n_selected <- ncol(pca_res$x)
+  } else if (n_pcs < 1) {
     n_selected <- which(cum_var >= n_pcs)[1]
     if (is.na(n_selected)) {
       stop("Could not reach requested variance proportion with available PCs.")
     }
-    message(
-      "Automatically selecting ", n_selected,
-      " PCs to explain at least ", round(n_pcs * 100, 1), "% variance."
-    )
+    message("Automatically selecting ", n_selected,
+            " PCs to explain at least ", round(n_pcs * 100, 1), "% variance.")
   } else {
     n_selected <- as.integer(n_pcs)
     message("Using fixed ", n_selected, " PCs.")
   }
 
   if (n_selected > ncol(pca_res$x)) {
-    stop("Requested number of PCs (", n_selected, ") exceeds available PCs (", ncol(pca_res$x), ").")
+    stop("Requested number of PCs (", n_selected,
+         ") exceeds available PCs (", ncol(pca_res$x), ").")
   }
 
-  top_pcs <- pca_res$x[, seq_len(n_selected), drop = FALSE]
+  list(pca = pca_res, pcs = pca_res$x[, seq_len(n_selected), drop = FALSE])
+}
+
+#' Run PCA and anticlustering on SNPDataLong
+#'
+#' Runs PCA on a \code{SNPDataLong} object (via \code{\link{runPCA}}) and then
+#' performs anticlustering on the selected principal components.
+#'
+#' @param object An object of class \code{SNPDataLong}.
+#' @param K Number of groups for anticlustering, or a vector of group sizes
+#'   (as in \pkg{anticlust}).
+#' @param n_pcs Number of top principal components to use. If \code{< 1}, it is
+#'   interpreted as the proportion of variance to be explained (e.g. \code{0.8}).
+#'   The fast matrix-free PCA path is used when a fixed number (\code{>= 1}) is
+#'   requested and \pkg{RSpectra} is installed.
+#' @param center Logical or numeric, passed to \code{\link{runPCA}}. Default
+#'   \code{TRUE}.
+#' @param scale Logical or numeric, passed to \code{\link{runPCA}}. Default
+#'   \code{TRUE}.
+#' @param anticlust_method Which \pkg{anticlust} optimiser to use.
+#'   \code{"exchange"} (default) calls \code{anticlust::anticlustering};
+#'   \code{"fast"} calls \code{anticlust::fast_anticlustering}, which scales to
+#'   large numbers of individuals and may return different assignments.
+#'
+#' @returns
+#' A list with components:
+#' \describe{
+#'   \item{groups}{Integer vector with anticlustering group assignments.}
+#'   \item{pca}{The PCA result object (a \code{prcomp}-like list), as returned
+#'     by \code{\link{runPCA}}.}
+#'   \item{pcs}{Numeric matrix of the PCs used for anticlustering.}
+#' }
+#'
+#' @examplesIf requireNamespace("anticlust", quietly = TRUE) && exists("nelore_imputed")
+#' res <- runAnticlusteringPCA(nelore_imputed, K = 2, n_pcs = 0.8)
+#' table(res$groups)
+#'
+#' @export
+runAnticlusteringPCA <- function(object, K = 2, n_pcs = 20, center = TRUE,
+                                 scale = TRUE,
+                                 anticlust_method = c("exchange", "fast")) {
+  anticlust_method <- match.arg(anticlust_method)
+
+  if (!is.numeric(n_pcs) || length(n_pcs) != 1L || is.na(n_pcs)) {
+    stop("`n_pcs` must be a single numeric value.")
+  }
+
+  pr      <- runPCA(object, n_pcs = n_pcs, center = center, scale = scale)
+  pca_res <- pr$pca
+  top_pcs <- pr$pcs
   message("Top PCs extracted.")
 
   if (!requireNamespace("anticlust", quietly = TRUE)) {

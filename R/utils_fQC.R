@@ -505,13 +505,19 @@ pairs2sets <- function(pairs) {
   }
 }
 
-#' Do genome relationship matrix PCA
+#' Do genome relationship matrix PCA (deprecated)
 #'
-#' Performs PCA using the genome relationship matrix (GRM).
+#' @description
+#' \strong{Deprecated}. Performs PCA using the genome relationship matrix (GRM)
+#' on a raw \code{SnpMatrix}. Use \code{\link{runPCA}} instead, which operates on
+#' a \code{SNPDataLong} object, standardises SNPs, and returns scores directly
+#' comparable to \code{\link{runAnticlusteringPCA}}.
 #'
 #' @param genotypes Genotype matrix.
 #'
 #' @return List containing `pcs` (principal components) and `eigen` (eigenvalues).
+#'
+#' @seealso \code{\link{runPCA}}
 #'
 #' @examples
 #' \donttest{
@@ -526,6 +532,7 @@ pairs2sets <- function(pairs) {
 #'
 #' @export
 doPCA <- function(genotypes) {
+  .Deprecated("runPCA")
   xxmat <- snpStats::xxt(genotypes, correct.for.missing = FALSE)
   evv <- eigen(xxmat, symmetric = TRUE)
   pcs <- evv$vectors

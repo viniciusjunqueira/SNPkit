@@ -1,5 +1,21 @@
 # SNPkit 0.1.1
 
+## New features
+
+* New exported function `runPCA()` runs the genotype PCA on a `SNPDataLong`
+  object without any clustering, returning a `prcomp`-like object and the
+  selected top principal components. It uses the same PCA engine as
+  `runAnticlusteringPCA()` (standardised SNPs, Gram-matrix eigendecomposition,
+  optional matrix-free `RSpectra` fast path), so scores are directly
+  comparable. `runAnticlusteringPCA()` now calls `runPCA()` internally.
+
+## Deprecations
+
+* `doPCA()` is deprecated in favour of `runPCA()`. It still works but emits a
+  deprecation message. `doPCA()` used an unscaled GRM (`snpStats::xxt`) on a raw
+  `SnpMatrix`; `runPCA()` is the recommended, standardised PCA on a
+  `SNPDataLong`.
+
 ## Performance
 
 * `runAnticlusteringPCA()` is now dramatically faster and lighter on memory for

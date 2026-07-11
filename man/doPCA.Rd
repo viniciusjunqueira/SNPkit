@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils_fQC.R
 \name{doPCA}
 \alias{doPCA}
-\title{Do genome relationship matrix PCA}
+\title{Do genome relationship matrix PCA (deprecated)}
 \usage{
 doPCA(genotypes)
 }
@@ -13,7 +13,10 @@ doPCA(genotypes)
 List containing `pcs` (principal components) and `eigen` (eigenvalues).
 }
 \description{
-Performs PCA using the genome relationship matrix (GRM).
+\strong{Deprecated}. Performs PCA using the genome relationship matrix (GRM)
+on a raw \code{SnpMatrix}. Use \code{\link{runPCA}} instead, which operates on
+a \code{SNPDataLong} object, standardises SNPs, and returns scores directly
+comparable to \code{\link{runAnticlusteringPCA}}.
 }
 \examples{
 \donttest{
@@ -26,4 +29,7 @@ res <- doPCA(geno)
 str(res)
 }
 
+}
+\seealso{
+\code{\link{runPCA}}
 }
