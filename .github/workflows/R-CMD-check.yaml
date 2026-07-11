@@ -50,3 +50,9 @@ jobs:
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          # Fail only on ERRORs. The default ("warning") was flagging compiler
+          # warnings from R's own headers / the CI toolchain (e.g. clang's
+          # -Wfixed-enum-extension on macOS), which are outside the package's
+          # control. Real package problems (Rd, codoc, examples) still surface
+          # as NOTEs/ERRORs and at CRAN submission.
+          error-on: '"error"'
