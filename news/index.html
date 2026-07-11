@@ -60,6 +60,15 @@
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.1.1" id="snpkit-011">SNPkit 0.1.1<a class="anchor" aria-label="anchor" href="#snpkit-011"></a></h2>
 <div class="section level3">
+<h3 id="new-features-0-1-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-1-1"></a></h3>
+<ul><li>New exported function <code><a href="../reference/runPCA.html">runPCA()</a></code> runs the genotype PCA on a <code>SNPDataLong</code> object without any clustering, returning a <code>prcomp</code>-like object and the selected top principal components. It uses the same PCA engine as <code><a href="../reference/runAnticlusteringPCA.html">runAnticlusteringPCA()</a></code> (standardised SNPs, Gram-matrix eigendecomposition, optional matrix-free <code>RSpectra</code> fast path), so scores are directly comparable. <code><a href="../reference/runAnticlusteringPCA.html">runAnticlusteringPCA()</a></code> now calls <code><a href="../reference/runPCA.html">runPCA()</a></code> internally.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="deprecations-0-1-1">Deprecations<a class="anchor" aria-label="anchor" href="#deprecations-0-1-1"></a></h3>
+<ul><li>
+<code><a href="../reference/doPCA.html">doPCA()</a></code> is deprecated in favour of <code><a href="../reference/runPCA.html">runPCA()</a></code>. It still works but emits a deprecation message. <code><a href="../reference/doPCA.html">doPCA()</a></code> used an unscaled GRM (<code><a href="https://rdrr.io/pkg/snpStats/man/xxt.html" class="external-link">snpStats::xxt</a></code>) on a raw <code>SnpMatrix</code>; <code><a href="../reference/runPCA.html">runPCA()</a></code> is the recommended, standardised PCA on a <code>SNPDataLong</code>.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="performance-0-1-1">Performance<a class="anchor" aria-label="anchor" href="#performance-0-1-1"></a></h3>
 <ul><li><p><code><a href="../reference/runAnticlusteringPCA.html">runAnticlusteringPCA()</a></code> is now dramatically faster and lighter on memory for wide genotype data. When there are more SNPs than individuals (the usual case), PCA is computed from the small n x n Gram matrix instead of a full SVD on the n x p matrix, avoiding the construction of the huge p x n rotation matrix (which could be several GB and was never used). The genotype matrix is also no longer converted to a <code>data.frame</code> before PCA. Scores and standard deviations are unchanged. <code><a href="../reference/runAnticlusteringPCA.html">runAnticlusteringPCA()</a></code> no longer uses <code>anticlust</code>’s removed <code>features</code> argument.</p></li>
 <li><p><code><a href="../reference/runAnticlusteringPCA.html">runAnticlusteringPCA()</a></code>: when a fixed number of PCs is requested and the optional <code>RSpectra</code> package is installed, only the top <code>n_pcs</code> components are computed with a matrix-free solver, so the n x n Gram matrix is never formed at all. This is the dominant remaining cost for very wide data. Falls back to the Gram-matrix <code>eigen</code> decomposition when <code>RSpectra</code> is absent or a proportion of variance is requested (<code>n_pcs &lt; 1</code>).</p></li>
@@ -92,7 +101,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

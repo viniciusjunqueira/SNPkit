@@ -54,6 +54,7 @@
 <url><loc>/reference/read.fimpute.html</loc></url>
 <url><loc>/reference/runAnticlusteringPCA.html</loc></url>
 <url><loc>/reference/runFImpute.html</loc></url>
+<url><loc>/reference/runPCA.html</loc></url>
 <url><loc>/reference/run_admixture.html</loc></url>
 <url><loc>/reference/saveFImpute.html</loc></url>
 <url><loc>/reference/saveFImputeRaw.html</loc></url>
