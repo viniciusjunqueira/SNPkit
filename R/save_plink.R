@@ -8,6 +8,10 @@
 #' @param name Character. Base name for PLINK output files.
 #' @param run_plink Logical. If TRUE (default), runs PLINK1 to convert to binary files. If FALSE, only .ped and .map files are saved.
 #' @param chunk_size Integer. Number of individuals per chunk for writing .ped file (default: 1000).
+#' @param extra_args Character vector. Extra arguments appended verbatim to the
+#'   PLINK command line when \code{run_plink = TRUE}. Useful for non-human data;
+#'   e.g. \code{"--chr-set 29"} makes PLINK treat autosomes 1-29 correctly for
+#'   cattle instead of reading 23-26 as human X/Y/XY/MT. Default is NULL.
 #'
 #' @return No return value, called for side effects. Files (\code{.ped}/\code{.map},
 #'   and \code{.bed}/\code{.bim}/\code{.fam} when \code{run_plink = TRUE}) are
@@ -32,7 +36,7 @@
 #' }
 #' @importFrom utils write.table
 #' @export
-savePlink <- function(object, path, name = "plink_data", run_plink = TRUE, chunk_size = 1000) {
+savePlink <- function(object, path, name = "plink_data", run_plink = TRUE, chunk_size = 1000, extra_args = NULL) {
   if (!inherits(object, "SNPDataLong")) {
     stop("Input object must be of class SNPDataLong.")
   }
@@ -95,7 +99,8 @@ savePlink <- function(object, path, name = "plink_data", run_plink = TRUE, chunk
   ## ----- Optionally run PLINK -----
   if (run_plink) {
     message("Running PLINK to generate binary files...")
-    cmd <- paste("cd", shQuote(path), "&& plink1 --file", shQuote(name), "--map3 --out", shQuote(name), "--make-bed --noweb")
+    extra <- if (!is.null(extra_args)) paste(extra_args, collapse = " ") else ""
+    cmd <- paste("cd", shQuote(path), "&& plink1 --file", shQuote(name), "--map3 --out", shQuote(name), "--make-bed --noweb", extra)
     status <- system(cmd)
 
     if (status == 0) {
