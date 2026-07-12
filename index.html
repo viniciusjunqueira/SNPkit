@@ -89,7 +89,7 @@
 <li>Import Illumina <code>FinalReport.txt</code> files (any panel density) and merge multiple genotype panels into a single object.</li>
 <li>Quality control on SNPs and samples (call rate, MAF, HWE, monomorphic, duplicated positions, chromosome filters).</li>
 <li>Prepare and run <strong>FImpute</strong> imputation and export to <strong>PLINK</strong>.</li>
-<li>PCA and anticlustering utilities for building balanced groups (e.g. batch design).</li>
+<li>PCA (<code><a href="reference/runPCA.html">runPCA()</a></code>) and anticlustering (<code><a href="reference/runAnticlusteringPCA.html">runAnticlusteringPCA()</a></code>) utilities for exploring structure and building balanced groups (e.g. batch design).</li>
 </ul>
 <hr>
 <div class="section level2">
@@ -109,7 +109,7 @@
 <div class="section level3">
 <h3 id="optional-faster-pca">Optional: faster PCA<a class="anchor" aria-label="anchor" href="#optional-faster-pca"></a>
 </h3>
-<p><code><a href="reference/runAnticlusteringPCA.html">runAnticlusteringPCA()</a></code> can use <a href="https://CRAN.R-project.org/package=RSpectra" class="external-link"><code>RSpectra</code></a> for a much faster, low-memory truncated PCA on wide genotype data. It is optional — install it to enable the fast path:</p>
+<p><code><a href="reference/runPCA.html">runPCA()</a></code> and <code><a href="reference/runAnticlusteringPCA.html">runAnticlusteringPCA()</a></code> can use <a href="https://CRAN.R-project.org/package=RSpectra" class="external-link"><code>RSpectra</code></a> for a much faster, low-memory truncated PCA on wide genotype data. It is optional — install it to enable the fast path:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"RSpectra"</span><span class="op">)</span></span></code></pre></div>
 </div>
