@@ -119,26 +119,36 @@ run_admixture <- function(path, prefix, admixture_path = "admixture", K,
   # Run
   message("Running ADMIXTURE: ", admix_exec, " ", paste(cmd_args, collapse = " "))
   res <- system2(admix_exec, args = cmd_args)
-  
+
   if (res != 0) {
-    warning("ADMIXTURE did not finish successfully. Check logs.")
+    warning("ADMIXTURE returned a non-zero exit status (", res,
+            "). This can happen even when results are produced; ",
+            "checking for output files.")
   } else {
     message("ADMIXTURE run completed successfully.")
-    
-    if (!is.null(out_prefix)) {
-      q_file <- paste0(prefix, ".", K, ".Q")
-      p_file <- paste0(prefix, ".", K, ".P")
-      log_file <- paste0(prefix, ".log")
-      
-      new_q_file <- file.path(path, paste0(out_prefix, ".Q"))
-      new_p_file <- file.path(path, paste0(out_prefix, ".P"))
-      new_log_file <- file.path(path, paste0(out_prefix, ".log"))
-      
-      if (file.exists(q_file)) file.rename(q_file, new_q_file)
+  }
+
+  # Rename outputs based on whether the .Q file was actually produced, not on
+  # the exit status: ADMIXTURE may return non-zero (e.g. with heterozygous
+  # haploid warnings) while still writing valid results. Renaming per run also
+  # prevents successive runs (same K) from overwriting each other's output.
+  if (!is.null(out_prefix)) {
+    q_file <- paste0(prefix, ".", K, ".Q")
+    p_file <- paste0(prefix, ".", K, ".P")
+    log_file <- paste0(prefix, ".log")
+
+    new_q_file <- file.path(path, paste0(out_prefix, ".Q"))
+    new_p_file <- file.path(path, paste0(out_prefix, ".P"))
+    new_log_file <- file.path(path, paste0(out_prefix, ".log"))
+
+    if (file.exists(q_file)) {
+      file.rename(q_file, new_q_file)
       if (file.exists(p_file)) file.rename(p_file, new_p_file)
       if (file.exists(log_file)) file.rename(log_file, new_log_file)
-      
       message("Output files renamed with prefix: ", out_prefix)
+    } else {
+      warning("Expected ADMIXTURE output '", q_file,
+              "' not found; nothing was renamed. The run may have failed.")
     }
   }
   
