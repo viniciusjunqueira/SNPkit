@@ -124,7 +124,7 @@ list.files(out_dir, pattern = "demo")
 
 # Where to go next
 
-See `?qcSNPs`, `?savePlink`, `?saveFImpute`, and `?runAnticlusteringPCA` for
-details on the individual functions. Functions that wrap external software
-(FImpute, PLINK, ADMIXTURE) require the corresponding binary to be installed
-on the system.
+See `?qcSNPs`, `?savePlink`, `?saveFImpute`, `?runPCA`, and
+`?runAnticlusteringPCA` for details on the individual functions. Functions that
+wrap external software (FImpute, PLINK, ADMIXTURE) require the corresponding
+binary to be installed on the system.

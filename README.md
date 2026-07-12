@@ -13,7 +13,7 @@ Key capabilities:
 -   Import Illumina `FinalReport.txt` files (any panel density) and merge multiple genotype panels into a single object.
 -   Quality control on SNPs and samples (call rate, MAF, HWE, monomorphic, duplicated positions, chromosome filters).
 -   Prepare and run **FImpute** imputation and export to **PLINK**.
--   PCA and anticlustering utilities for building balanced groups (e.g. batch design).
+-   PCA (`runPCA()`) and anticlustering (`runAnticlusteringPCA()`) utilities for exploring structure and building balanced groups (e.g. batch design).
 
 ------------------------------------------------------------------------
 
@@ -41,7 +41,7 @@ remotes::install_github("viniciusjunqueira/SNPkit")
 
 ### Optional: faster PCA
 
-`runAnticlusteringPCA()` can use [`RSpectra`](https://CRAN.R-project.org/package=RSpectra) for a much faster, low-memory truncated PCA on wide genotype data. It is optional — install it to enable the fast path:
+`runPCA()` and `runAnticlusteringPCA()` can use [`RSpectra`](https://CRAN.R-project.org/package=RSpectra) for a much faster, low-memory truncated PCA on wide genotype data. It is optional — install it to enable the fast path:
 
 ``` r
 install.packages("RSpectra")
