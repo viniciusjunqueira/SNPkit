@@ -112,15 +112,6 @@
 <p><code><a href="reference/runPCA.html">runPCA()</a></code> and <code><a href="reference/runAnticlusteringPCA.html">runAnticlusteringPCA()</a></code> can use <a href="https://CRAN.R-project.org/package=RSpectra" class="external-link"><code>RSpectra</code></a> for a much faster, low-memory truncated PCA on wide genotype data. It is optional — install it to enable the fast path:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"RSpectra"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="installing-behind-a-firewall--offline-server">Installing behind a firewall / offline server<a class="anchor" aria-label="anchor" href="#installing-behind-a-firewall--offline-server"></a>
-</h3>
-<p>If the target machine cannot reach GitHub (e.g. a proxy returns HTTP 403), build a source tarball locally and copy it over:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="ex">R</span> CMD build SNPkit                 <span class="co"># produces SNPkit_x.y.z.tar.gz</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">scp</span> SNPkit_x.y.z.tar.gz user@server:~/</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># on the server:</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL SNPkit_x.y.z.tar.gz</span></code></pre></div>
 <hr>
 </div>
 </div>
