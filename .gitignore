@@ -36,3 +36,4 @@ docs/
 
 # Images temporárias
 # *.png
+.vscode/
