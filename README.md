@@ -47,17 +47,6 @@ remotes::install_github("viniciusjunqueira/SNPkit")
 install.packages("RSpectra")
 ```
 
-### Installing behind a firewall / offline server
-
-If the target machine cannot reach GitHub (e.g. a proxy returns HTTP 403), build a source tarball locally and copy it over:
-
-``` bash
-R CMD build SNPkit                 # produces SNPkit_x.y.z.tar.gz
-scp SNPkit_x.y.z.tar.gz user@server:~/
-# on the server:
-R CMD INSTALL SNPkit_x.y.z.tar.gz
-```
-
 ------------------------------------------------------------------------
 
 ## 📖 Documentation
