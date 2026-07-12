@@ -25,7 +25,7 @@ mat <- matrix(sample(as.raw(1:3), 200, TRUE), nrow = 10, ncol = 20)
 geno <- methods::new("SnpMatrix", mat)
 rownames(geno) <- paste0("S", 1:10)
 colnames(geno) <- paste0("SNP", 1:20)
-res <- doPCA(geno)
+res <- suppressWarnings(doPCA(geno))  # doPCA is deprecated; use runPCA()
 str(res)
 }
 
