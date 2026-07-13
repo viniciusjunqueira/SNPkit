@@ -106,13 +106,15 @@ as_snpmatrix <- function(geno,
                  as.character(geno[idx[1], idx[2]]), idx[1], idx[2]))
   }
 
-  # Encode to raw for SnpMatrix: 0,1,2, 3(=missing)
+  # Encode to raw for SnpMatrix: 0x00 = missing (no call), and 0/1/2 copies of
+  # the counted allele map to 0x01/0x02/0x03 respectively. This is the encoding
+  # snpStats expects (and matches getGeno()); do NOT shift it.
   nr <- nrow(geno); nc <- ncol(geno)
-  rawG <- matrix(as.raw(3L), nrow=nr, ncol=nc, dimnames=dimnames(geno))
+  rawG <- matrix(as.raw(0L), nrow=nr, ncol=nc, dimnames=dimnames(geno))
   nz <- !is.na(geno)
-  rawG[nz & geno == 0L] <- as.raw(0L)
-  rawG[nz & geno == 1L] <- as.raw(1L)
-  rawG[nz & geno == 2L] <- as.raw(2L)
+  rawG[nz & geno == 0L] <- as.raw(1L)
+  rawG[nz & geno == 1L] <- as.raw(2L)
+  rawG[nz & geno == 2L] <- as.raw(3L)
 
   # Construct the SnpMatrix
   methods::new("SnpMatrix", rawG)
