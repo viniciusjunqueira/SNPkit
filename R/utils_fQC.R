@@ -77,28 +77,37 @@ check.identical.samples <- function(genotypes, threshold = 0) {
     numeric_geno <- genotypes
   }
 
+  empty <- data.frame(Sample1 = character(),
+                      Sample2 = character(),
+                      Distance = numeric(),
+                      stringsAsFactors = FALSE)
+
+  n <- nrow(numeric_geno)
+  if (is.null(n) || n < 2) {
+    return(empty)
+  }
+
   mdistm <- as.matrix(stats::dist(numeric_geno))
   sample.names <- rownames(mdistm)
-  n <- length(sample.names)
 
-  sample.pairs <- data.frame(Sample1 = character(),
-                             Sample2 = character(),
-                             Distance = numeric(),
+  # Vectorized extraction of the upper-triangle pairs within threshold, ordered
+  # row-major (i < j) -- avoids the quadratic rbind-in-loop.
+  hits <- which(upper.tri(mdistm) & mdistm <= threshold, arr.ind = TRUE)
+  if (nrow(hits) == 0) {
+    return(empty)
+  }
+  hits <- hits[order(hits[, "row"], hits[, "col"]), , drop = FALSE]
+
+  sample.pairs <- data.frame(Sample1 = sample.names[hits[, "row"]],
+                             Sample2 = sample.names[hits[, "col"]],
+                             Distance = mdistm[hits],
                              stringsAsFactors = FALSE)
 
-  for (i in 1:(n - 1)) {
-    for (j in (i + 1):n) {
-      if (mdistm[i, j] <= threshold) {
-        warning(paste("Identical samples:", sample.names[i], "-", sample.names[j]))
-        sample.pairs <- rbind(sample.pairs,
-                              data.frame(Sample1 = sample.names[i],
-                                         Sample2 = sample.names[j],
-                                         Distance = mdistm[i, j],
-                                         stringsAsFactors = FALSE))
-      }
-    }
+  for (r in seq_len(nrow(sample.pairs))) {
+    warning(paste("Identical samples:", sample.pairs$Sample1[r],
+                  "-", sample.pairs$Sample2[r]))
   }
-  return(sample.pairs)
+  sample.pairs
 }
 
 
@@ -166,17 +175,22 @@ check.identical.samples.by.block <- function(genotypes, blcsize, threshold = 0) 
 #'
 #' @export
 check.mendelian.inconsistencies <- function(genotypes, father, child) {
-  sample1 <- NULL
-  sample2 <- NULL
   m <- length(child)
   n <- length(father)
+  if (n == 0 || m == 0) {
+    return(data.frame(Father = character(), Child = character(),
+                      N = numeric(), Total = numeric(), Rate = numeric(),
+                      stringsAsFactors = FALSE))
+  }
+  sample1 <- NULL
+  sample2 <- NULL
   n.inconsist <- NULL
   t.inconsist <- NULL
   tx.inconsist <- NULL
-  for (i in 1:n) {
+  for (i in seq_len(n)) {
     g1 <- genotypes[father[i], ]
     nam1 <- father[i]
-    for (j in 1:m) {
+    for (j in seq_len(m)) {
       nam2 <- child[j]
       if (nam1 != nam2) {
         sample1 <- c(sample1, paste(nam1))
@@ -410,34 +424,18 @@ check.snp.no.position <- function(snpmap) {
 #'
 #' @export
 check.snp.same.position <- function(snpmap) {
-  chromo <- unique(snpmap[, "Chromosome"])
-  snps <- list()
-  k <- 1
-  for (chr in chromo) {
-    message("Analyzing chromosome ", chr)
-    snpmap.chr <- snpmap[snpmap[, "Chromosome"] == chr, ]
-    sorted.snpmap.chr <- snpmap.chr[order(snpmap.chr[, "Position"]), ]
-    m <- nrow(sorted.snpmap.chr)
-
-    for (j in 1:(m - 1)) {
-      j1 <- j + 1
-
-      if (isTRUE(sorted.snpmap.chr[j, "Position"] == sorted.snpmap.chr[j1, "Position"])) {
-        # message("SNPs in same position: ", sorted.snpmap.chr[j, "Name"], " - ", sorted.snpmap.chr[j1, "Name"])
-
-        if (length(snps) < k) {
-          snps[[k]] <- c(as.character(sorted.snpmap.chr[j, "Name"]), as.character(sorted.snpmap.chr[j1, "Name"]))
-        } else {
-          snps[[k]] <- c(snps[[k]], as.character(sorted.snpmap.chr[j1, "Name"]))
-        }
-      } else {
-        if (length(snps) == k) {
-          k <- k + 1
-        }
-      }
-    }
+  pos <- snpmap[["Position"]]
+  ok  <- !is.na(pos)
+  if (!any(ok)) {
+    return(list())
   }
-  return(snps)
+  # Group SNP names by chromosome + position; groups with more than one SNP
+  # share a locus. Vectorized and free of adjacency/index bookkeeping, so it is
+  # safe for single-SNP chromosomes and missing positions.
+  key    <- paste(snpmap[["Chromosome"]][ok], pos[ok], sep = ":")
+  snp_id <- as.character(snpmap[["Name"]])[ok]
+  groups <- split(snp_id, key)
+  unname(groups[lengths(groups) > 1])
 }
 
 
@@ -489,11 +487,13 @@ pairs2sets <- function(pairs) {
       toremove <- idx[1]
       sample.ident[[k]] <- as.character(sample.pairs[idx[1], ])
       pivot <- sample.ident[[k]]
-      for (i in 2:n) {
-        settest <- as.character(sample.pairs[idx[i], ])
-        if (length(intersect(pivot, settest)) > 0) {
-          pivot <- union(pivot, settest)
-          toremove <- c(toremove, idx[i])
+      if (n >= 2) {
+        for (i in 2:n) {
+          settest <- as.character(sample.pairs[idx[i], ])
+          if (length(intersect(pivot, settest)) > 0) {
+            pivot <- union(pivot, settest)
+            toremove <- c(toremove, idx[i])
+          }
         }
       }
       sample.ident[[k]] <- pivot

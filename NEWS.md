@@ -1,3 +1,39 @@
+# SNPkit 0.1.2
+
+## Bug fixes
+
+* `as_snpmatrix()` used a shifted byte encoding, so genotype `0` was stored as
+  missing, missing as `BB`, and heterozygotes/alt-homozygotes were off by one.
+  Any snpStats statistic (call rate, MAF, HWE, GRM/PCA) computed on its output
+  was therefore wrong. It now uses the canonical `SnpMatrix` encoding
+  (`0x00 = missing`, `0/1/2 -> 0x01/0x02/0x03`), matching `getGeno()`.
+* `check.snp.same.position()` was defined twice; the shadowing copy lacked
+  guards. It is now a single vectorized definition that groups SNPs by
+  chromosome + position, safe for single-SNP chromosomes and missing positions.
+* `check.identical.samples()`, `pairs2sets()` and
+  `check.mendelian.inconsistencies()` no longer error on empty or single-element
+  inputs (`1:n` / `2:n` off-by-one guards). `check.identical.samples()` also
+  extracts pairs vectorially instead of growing a data.frame in a nested loop.
+
+## Internal changes
+
+* `combineSNPData()` now assembles the combined genotype matrix through
+  `rbindSnpFlexible()` instead of a duplicated inline implementation. The
+  returned object is byte-identical to before (covered by a new equivalence
+  test suite); only the intermediate "Adding N missing SNPs" message is no
+  longer emitted.
+* `rbindSnpFlexible()`, `rbind_SnpMatrix()` and `cbind_SnpMatrix()` are now
+  internal helpers (no longer exported). Use `combineSNPData()` for the
+  supported, high-level combining workflow.
+
+## Tests
+
+* Added a `testthat` suite, including a broad characterization battery that
+  checks `combineSNPData()` against a reference copy of the pre-refactor
+  implementation across overlapping/partial/disjoint/multi-object/randomized
+  inputs and edge cases.
+
+
 # SNPkit 0.1.1
 
 ## New features
