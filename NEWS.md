@@ -2,6 +2,11 @@
 
 ## Bug fixes
 
+* `run_admixture()` renamed its outputs to a doubly-nested, non-existent path
+  when `path` was relative (it `setwd()`s into `path`, then built the rename
+  target with `file.path(path, ...)` again). The rename failed silently, so
+  successive same-K runs overwrote each other's `.Q`/`.P`. `path` is now
+  resolved to an absolute path and the rename is verified (warns on failure).
 * `as_snpmatrix()` used a shifted byte encoding, so genotype `0` was stored as
   missing, missing as `BB`, and heterozygotes/alt-homozygotes were off by one.
   Any snpStats statistic (call rate, MAF, HWE, GRM/PCA) computed on its output

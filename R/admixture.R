@@ -66,6 +66,12 @@ run_admixture <- function(path, prefix, admixture_path = "admixture", K,
     stop("ADMIXTURE executable not found. Please ensure it is installed and available in your PATH or provide full path.")
   }
   
+  # Resolve to an absolute path up front. The function setwd()s into `path`
+  # before running ADMIXTURE, so any later file.path(path, ...) must be absolute
+  # -- otherwise a relative `path` gets re-resolved against the new working
+  # directory (double-nested) and the output rename silently fails.
+  path <- normalizePath(path, mustWork = FALSE)
+
   # Build file paths
   bed_file <- file.path(path, paste0(prefix, ".bed"))
   bim_file <- file.path(path, paste0(prefix, ".bim"))
@@ -133,24 +139,42 @@ run_admixture <- function(path, prefix, admixture_path = "admixture", K,
   # haploid warnings) while still writing valid results. Renaming per run also
   # prevents successive runs (same K) from overwriting each other's output.
   if (!is.null(out_prefix)) {
-    q_file <- paste0(prefix, ".", K, ".Q")
-    p_file <- paste0(prefix, ".", K, ".P")
-    log_file <- paste0(prefix, ".log")
-
-    new_q_file <- file.path(path, paste0(out_prefix, ".Q"))
-    new_p_file <- file.path(path, paste0(out_prefix, ".P"))
-    new_log_file <- file.path(path, paste0(out_prefix, ".log"))
-
-    if (file.exists(q_file)) {
-      file.rename(q_file, new_q_file)
-      if (file.exists(p_file)) file.rename(p_file, new_p_file)
-      if (file.exists(log_file)) file.rename(log_file, new_log_file)
-      message("Output files renamed with prefix: ", out_prefix)
-    } else {
-      warning("Expected ADMIXTURE output '", q_file,
-              "' not found; nothing was renamed. The run may have failed.")
-    }
+    .rename_admixture_outputs(path, prefix, K, out_prefix)
   }
   
   invisible(NULL)
+}
+
+# Rename ADMIXTURE's <prefix>.<K>.Q/.P (and the run log) to <out_prefix>.* inside
+# `dir`. `dir` is normalized to an absolute path so it works whether the caller
+# passes an absolute path, a relative one, or ".", and regardless of the current
+# working directory. Returns TRUE only if the rename actually succeeded, warning
+# (instead of silently claiming success) otherwise.
+#' @noRd
+.rename_admixture_outputs <- function(dir, prefix, K, out_prefix) {
+  dir <- normalizePath(dir, mustWork = FALSE)
+  q_file   <- file.path(dir, paste0(prefix, ".", K, ".Q"))
+  p_file   <- file.path(dir, paste0(prefix, ".", K, ".P"))
+  log_file <- file.path(dir, paste0(prefix, ".log"))
+  new_q    <- file.path(dir, paste0(out_prefix, ".Q"))
+  new_p    <- file.path(dir, paste0(out_prefix, ".P"))
+  new_log  <- file.path(dir, paste0(out_prefix, ".log"))
+
+  if (!file.exists(q_file)) {
+    warning("Expected ADMIXTURE output '", q_file,
+            "' not found; nothing was renamed. The run may have failed.")
+    return(invisible(FALSE))
+  }
+
+  ok <- file.rename(q_file, new_q)
+  if (file.exists(p_file))   ok <- file.rename(p_file, new_p)     && ok
+  if (file.exists(log_file)) ok <- file.rename(log_file, new_log) && ok
+
+  if (isTRUE(ok)) {
+    message("Output files renamed with prefix: ", out_prefix)
+  } else {
+    warning("Failed to rename one or more ADMIXTURE outputs to prefix '",
+            out_prefix, "'.")
+  }
+  invisible(isTRUE(ok))
 }
