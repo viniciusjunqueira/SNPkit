@@ -70,3 +70,33 @@ test_that("check.mendelian.inconsistencies: empty child is safe; counts a pair",
   expect_equal(res$N, 2)      # positions 1 and 3 are 1<->3 inconsistencies
   expect_equal(res$Total, 4)  # 4 comparable homozygous positions
 })
+
+test_that("check.snp.no.position flags NA, blank and zero (numeric or character)", {
+  # numeric column
+  m1 <- data.frame(Name = c("a", "b", "c", "d"), Chromosome = 1,
+                   Position = c(0, 100, NA, 250), stringsAsFactors = FALSE)
+  expect_setequal(check.snp.no.position(m1), c("a", "c"))
+
+  # character column, as read by getGeno(): "0", blank and "NA" all count
+  m2 <- data.frame(Name = c("a", "b", "c", "d"), Chromosome = "1",
+                   Position = c("0", "100", "", "NA"), stringsAsFactors = FALSE)
+  expect_setequal(check.snp.no.position(m2), c("a", "c", "d"))
+
+  # none missing -> NULL, and never returns NA names
+  m3 <- data.frame(Name = c("a", "b"), Chromosome = 1, Position = c(50, 100))
+  expect_null(check.snp.no.position(m3))
+  expect_false(anyNA(check.snp.no.position(m1)))
+})
+
+test_that("qcSNPs no_position filter removes both zero and NA positions", {
+  set.seed(1)
+  raw <- matrix(as.raw(sample(1:3, 4 * 5, TRUE)), nrow = 4,
+                dimnames = list(paste0("s", 1:4), paste0("m", 1:5)))
+  geno <- methods::new("SnpMatrix", raw)
+  map <- data.frame(Name = paste0("m", 1:5), Chromosome = 1,
+                    Position = c(0, 100, NA, 250, 300), stringsAsFactors = FALSE)
+  x <- methods::new("SNPDataLong", geno = geno, map = map,
+                    path = tempfile(), xref_path = "c")
+  rep <- suppressMessages(qcSNPs(x, no_position = TRUE, action = "report"))
+  expect_setequal(rep$removed_no_position, c("m1", "m3"))
+})

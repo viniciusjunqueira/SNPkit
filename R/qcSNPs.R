@@ -114,7 +114,7 @@ setMethod("qcSNPs", "SNPDataLong", function(x,
   if (!is.null(snp_position) && snp_position) {
     # Force removal of SNPs with missing position before position filter
     if (is.null(no_position) || !no_position) {
-      no_pos_manual <- map$Name[is.na(map$Position)]
+      no_pos_manual <- check.snp.no.position(map)
       if (length(no_pos_manual) > 0) {
         warning("SNPs without position removed automatically before snp_position filter.")
         keep_snps <- setdiff(keep_snps, no_pos_manual)

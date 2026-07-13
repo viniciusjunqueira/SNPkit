@@ -14,6 +14,10 @@
   `check.mendelian.inconsistencies()` no longer error on empty or single-element
   inputs (`1:n` / `2:n` off-by-one guards). `check.identical.samples()` also
   extracts pairs vectorially instead of growing a data.frame in a nested loop.
+* `check.snp.no.position()` now treats a SNP as unmapped when its position is
+  missing (`NA`), blank, non-numeric, or zero (previously only `== 0`, which
+  also returned spurious `NA` names when positions were missing). `qcSNPs()`
+  uses the same check consistently before the same-position filter.
 
 ## Internal changes
 

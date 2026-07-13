@@ -13,10 +13,13 @@ check.snp.no.position(snpmap)
 Character vector with SNP names without position. Returns `NULL` if none.
 }
 \description{
-Identifies SNPs with position equal to zero in the SNP map.
+Identifies SNPs without a usable genomic position, i.e. whose position is
+missing (`NA`), blank, non-numeric, or zero. The `Position` column may be
+numeric or character (`getGeno()` reads maps as character), so it is coerced
+to numeric first.
 }
 \examples{
-df <- data.frame(Position = c(0, 100), Name = c("SNP1", "SNP2"))
-check.snp.no.position(df)
+df <- data.frame(Position = c(0, 100, NA), Name = c("SNP1", "SNP2", "SNP3"))
+check.snp.no.position(df)  # SNP1 (zero) and SNP3 (missing)
 
 }

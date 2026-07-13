@@ -389,23 +389,30 @@ check.snp.monomorf <- function(snp.summary) {
 
 #' Check SNP no position
 #'
-#' Identifies SNPs with position equal to zero in the SNP map.
+#' Identifies SNPs without a usable genomic position, i.e. whose position is
+#' missing (`NA`), blank, non-numeric, or zero. The `Position` column may be
+#' numeric or character (`getGeno()` reads maps as character), so it is coerced
+#' to numeric first.
 #'
 #' @param snpmap Data frame with columns `Position` and `Name`.
 #'
 #' @return Character vector with SNP names without position. Returns `NULL` if none.
 #'
 #' @examples
-#' df <- data.frame(Position = c(0, 100), Name = c("SNP1", "SNP2"))
-#' check.snp.no.position(df)
+#' df <- data.frame(Position = c(0, 100, NA), Name = c("SNP1", "SNP2", "SNP3"))
+#' check.snp.no.position(df)  # SNP1 (zero) and SNP3 (missing)
 #'
 #' @export
 check.snp.no.position <- function(snpmap) {
-  snps <- snpmap[snpmap[, "Position"] == 0, "Name"]
+  # Coerce first so numeric and character maps behave the same; blank/non-numeric
+  # values become NA and count as "no position", as does an explicit zero.
+  pos_num <- suppressWarnings(as.numeric(snpmap[["Position"]]))
+  no_pos  <- is.na(pos_num) | pos_num == 0
+  snps <- as.character(snpmap[["Name"]])[no_pos]
   if (length(snps) == 0) {
-    snps <- NULL
+    return(NULL)
   }
-  return(as.character(snps))
+  snps
 }
 
 #' Check SNPs with same position
