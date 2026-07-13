@@ -13,7 +13,6 @@
 <url><loc>/reference/SNPkit.html</loc></url>
 <url><loc>/reference/Subset.html</loc></url>
 <url><loc>/reference/as_snpmatrix.html</loc></url>
-<url><loc>/reference/cbind_SnpMatrix.html</loc></url>
 <url><loc>/reference/check.call.rate.html</loc></url>
 <url><loc>/reference/check.ibs.html</loc></url>
 <url><loc>/reference/check.identical.samples.by.block.html</loc></url>
@@ -49,8 +48,6 @@
 <url><loc>/reference/qcSNPs.html</loc></url>
 <url><loc>/reference/qcSamples.html</loc></url>
 <url><loc>/reference/qc_header.html</loc></url>
-<url><loc>/reference/rbindSnpFlexible.html</loc></url>
-<url><loc>/reference/rbind_SnpMatrix.html</loc></url>
 <url><loc>/reference/read.fimpute.html</loc></url>
 <url><loc>/reference/runAnticlusteringPCA.html</loc></url>
 <url><loc>/reference/runFImpute.html</loc></url>

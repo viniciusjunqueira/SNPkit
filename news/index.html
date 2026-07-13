@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">SNPkit</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.2</span>
       </span>
     </div>
 
@@ -57,6 +57,29 @@
       <small>Source: <a href="https://github.com/viniciusjunqueira/SNPkit/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="0.1.2" id="snpkit-012">SNPkit 0.1.2<a class="anchor" aria-label="anchor" href="#snpkit-012"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-1-2">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-1-2"></a></h3>
+<ul><li>
+<code><a href="../reference/as_snpmatrix.html">as_snpmatrix()</a></code> used a shifted byte encoding, so genotype <code>0</code> was stored as missing, missing as <code>BB</code>, and heterozygotes/alt-homozygotes were off by one. Any snpStats statistic (call rate, MAF, HWE, GRM/PCA) computed on its output was therefore wrong. It now uses the canonical <code>SnpMatrix</code> encoding (<code>0x00 = missing</code>, <code>0/1/2 -&gt; 0x01/0x02/0x03</code>), matching <code><a href="../reference/getGeno.html">getGeno()</a></code>.</li>
+<li>
+<code><a href="../reference/check.snp.same.position.html">check.snp.same.position()</a></code> was defined twice; the shadowing copy lacked guards. It is now a single vectorized definition that groups SNPs by chromosome + position, safe for single-SNP chromosomes and missing positions.</li>
+<li>
+<code><a href="../reference/check.identical.samples.html">check.identical.samples()</a></code>, <code><a href="../reference/pairs2sets.html">pairs2sets()</a></code> and <code><a href="../reference/check.mendelian.inconsistencies.html">check.mendelian.inconsistencies()</a></code> no longer error on empty or single-element inputs (<code>1:n</code> / <code>2:n</code> off-by-one guards). <code><a href="../reference/check.identical.samples.html">check.identical.samples()</a></code> also extracts pairs vectorially instead of growing a data.frame in a nested loop.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="internal-changes-0-1-2">Internal changes<a class="anchor" aria-label="anchor" href="#internal-changes-0-1-2"></a></h3>
+<ul><li>
+<code><a href="../reference/combineSNPData.html">combineSNPData()</a></code> now assembles the combined genotype matrix through <code>rbindSnpFlexible()</code> instead of a duplicated inline implementation. The returned object is byte-identical to before (covered by a new equivalence test suite); only the intermediate “Adding N missing SNPs” message is no longer emitted.</li>
+<li>
+<code>rbindSnpFlexible()</code>, <code>rbind_SnpMatrix()</code> and <code>cbind_SnpMatrix()</code> are now internal helpers (no longer exported). Use <code><a href="../reference/combineSNPData.html">combineSNPData()</a></code> for the supported, high-level combining workflow.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="tests-0-1-2">Tests<a class="anchor" aria-label="anchor" href="#tests-0-1-2"></a></h3>
+<ul><li>Added a <code>testthat</code> suite, including a broad characterization battery that checks <code><a href="../reference/combineSNPData.html">combineSNPData()</a></code> against a reference copy of the pre-refactor implementation across overlapping/partial/disjoint/multi-object/randomized inputs and edge cases.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.1.1" id="snpkit-011">SNPkit 0.1.1<a class="anchor" aria-label="anchor" href="#snpkit-011"></a></h2>
 <div class="section level3">
