@@ -67,6 +67,8 @@
 <code><a href="../reference/check.snp.same.position.html">check.snp.same.position()</a></code> was defined twice; the shadowing copy lacked guards. It is now a single vectorized definition that groups SNPs by chromosome + position, safe for single-SNP chromosomes and missing positions.</li>
 <li>
 <code><a href="../reference/check.identical.samples.html">check.identical.samples()</a></code>, <code><a href="../reference/pairs2sets.html">pairs2sets()</a></code> and <code><a href="../reference/check.mendelian.inconsistencies.html">check.mendelian.inconsistencies()</a></code> no longer error on empty or single-element inputs (<code>1:n</code> / <code>2:n</code> off-by-one guards). <code><a href="../reference/check.identical.samples.html">check.identical.samples()</a></code> also extracts pairs vectorially instead of growing a data.frame in a nested loop.</li>
+<li>
+<code><a href="../reference/check.snp.no.position.html">check.snp.no.position()</a></code> now treats a SNP as unmapped when its position is missing (<code>NA</code>), blank, non-numeric, or zero (previously only <code>== 0</code>, which also returned spurious <code>NA</code> names when positions were missing). <code><a href="../reference/qcSNPs.html">qcSNPs()</a></code> uses the same check consistently before the same-position filter.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="internal-changes-0-1-2">Internal changes<a class="anchor" aria-label="anchor" href="#internal-changes-0-1-2"></a></h3>
