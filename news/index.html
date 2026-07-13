@@ -62,6 +62,8 @@
 <div class="section level3">
 <h3 id="bug-fixes-0-1-2">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-1-2"></a></h3>
 <ul><li>
+<code><a href="../reference/run_admixture.html">run_admixture()</a></code> renamed its outputs to a doubly-nested, non-existent path when <code>path</code> was relative (it <code><a href="https://rdrr.io/r/base/getwd.html" class="external-link">setwd()</a></code>s into <code>path</code>, then built the rename target with <code>file.path(path, ...)</code> again). The rename failed silently, so successive same-K runs overwrote each other’s <code>.Q</code>/<code>.P</code>. <code>path</code> is now resolved to an absolute path and the rename is verified (warns on failure).</li>
+<li>
 <code><a href="../reference/as_snpmatrix.html">as_snpmatrix()</a></code> used a shifted byte encoding, so genotype <code>0</code> was stored as missing, missing as <code>BB</code>, and heterozygotes/alt-homozygotes were off by one. Any snpStats statistic (call rate, MAF, HWE, GRM/PCA) computed on its output was therefore wrong. It now uses the canonical <code>SnpMatrix</code> encoding (<code>0x00 = missing</code>, <code>0/1/2 -&gt; 0x01/0x02/0x03</code>), matching <code><a href="../reference/getGeno.html">getGeno()</a></code>.</li>
 <li>
 <code><a href="../reference/check.snp.same.position.html">check.snp.same.position()</a></code> was defined twice; the shadowing copy lacked guards. It is now a single vectorized definition that groups SNPs by chromosome + position, safe for single-SNP chromosomes and missing positions.</li>
