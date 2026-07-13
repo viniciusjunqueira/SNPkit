@@ -113,13 +113,20 @@ check.identical.samples <- function(genotypes, threshold = 0) {
 
 #' Check identical samples by block
 #'
-#' Identifies identical samples within SNP blocks.
+#' Identifies sample pairs that stay identical (within \code{threshold}) across
+#' \emph{every} SNP block, scanning the markers in blocks of \code{blcsize}.
+#' Each block only re-checks the samples still in a confirmed pair, and pairs
+#' that separate in any block are dropped, so the result is the intersection of
+#' the per-block identical pairs.
 #'
-#' @param genotypes Genotype matrix.
+#' @param genotypes Genotype matrix (samples x SNPs) or SnpMatrix with sample
+#'   names as rownames.
 #' @param blcsize Block size (number of SNPs).
 #' @param threshold Distance threshold. Default 0.
 #'
-#' @return List of identical sample pairs.
+#' @return A data.frame of identical sample pairs (columns \code{Sample1},
+#'   \code{Sample2}, \code{Distance}); \code{Distance} is taken from the first
+#'   block. Empty data.frame if none.
 #'
 #' @examples
 #' set.seed(1)
@@ -129,30 +136,44 @@ check.identical.samples <- function(genotypes, threshold = 0) {
 #'
 #' @export
 check.identical.samples.by.block <- function(genotypes, blcsize, threshold = 0) {
-  pairs.c <- list()
-  n <- dim(genotypes)[2]
-  ini <- 1
-  fin <- min(blcsize, n)
-  genot.curr <- genotypes[, ini:fin]
-  while (ini <= n) {
-    message("Analyzing block ", ini, "-", fin)
-    pairs.c <- check.identical.samples(genot.curr, threshold)
-    if (is.data.frame(pairs.c) && nrow(pairs.c) > 0) {
-      m <- nrow(pairs.c)
-      notuniquesmps <- NULL
-      for (i in seq_len(m)) {
-        notuniquesmps <- union(notuniquesmps, as.character(pairs.c[i, 1:2]))
-      }
-      ini <- fin + 1
-      fin <- min(ini + blcsize - 1, n)
-      if (ini <= n) {
-        genot.curr <- genotypes[notuniquesmps, ini:fin, drop = FALSE]
-      }
-    } else {
-      break
-    }
+  empty <- data.frame(Sample1 = character(), Sample2 = character(),
+                      Distance = numeric(), stringsAsFactors = FALSE)
+  n_snp <- ncol(genotypes)
+  if (is.null(n_snp) || n_snp < 1 || nrow(genotypes) < 2) {
+    return(empty)
   }
-  return(pairs.c)
+
+  # Order-independent key so {A,B} and {B,A} match across blocks.
+  pair_ids <- function(df) {
+    if (nrow(df) == 0) return(character(0))
+    paste(pmin(df$Sample1, df$Sample2), pmax(df$Sample1, df$Sample2), sep = "\r")
+  }
+
+  confirmed <- NULL   # pairs identical in every block processed so far
+  ini <- 1
+  while (ini <= n_snp) {
+    fin <- min(ini + blcsize - 1, n_snp)
+    message("Analyzing block ", ini, "-", fin)
+
+    # Only samples still in a confirmed pair need re-checking.
+    rows <- if (is.null(confirmed)) rownames(genotypes)
+            else unique(c(confirmed$Sample1, confirmed$Sample2))
+    block <- suppressWarnings(
+      check.identical.samples(genotypes[rows, ini:fin, drop = FALSE], threshold)
+    )
+
+    if (is.null(confirmed)) {
+      confirmed <- block
+    } else {
+      confirmed <- confirmed[pair_ids(confirmed) %in% pair_ids(block), , drop = FALSE]
+    }
+    if (nrow(confirmed) == 0) {
+      return(empty)
+    }
+    ini <- fin + 1
+  }
+  rownames(confirmed) <- NULL
+  confirmed
 }
 
 #' Check Mendelian inconsistencies
@@ -686,9 +707,12 @@ exploratory.plots <- function(snp.summary, snps.plot, sample.summary, samples.pl
 get.correl.fc <- function(g1, g2) {
   g1 <- as.raw(g1)
   g2 <- as.raw(g2)
+  # av marks positions called in both samples (non-zero). Because it already
+  # excludes zeros, the former `== 0` concordance term was always zero and is
+  # dropped here without changing the result.
   av <- as.logical(g1) & as.logical(g2)
   t1 <- sum(av)
-  t2 <- sum(g1[av] == 0 & g2[av] == 0) + sum(g1[av] == 1 & g2[av] == 1) + sum(g1[av] == 2 & g2[av] == 2)
+  t2 <- sum(g1[av] == 1 & g2[av] == 1) + sum(g1[av] == 2 & g2[av] == 2)
   return(ifelse(t1, t2 / t1, 0))
 }
 

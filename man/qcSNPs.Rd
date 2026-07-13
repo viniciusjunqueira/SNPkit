@@ -9,8 +9,6 @@ qcSNPs(x, ...)
 
 \S4method{qcSNPs}{SNPDataLong}(
   x,
-  missing_ind = NULL,
-  missing_snp = NULL,
   min_snp_cr = NULL,
   min_maf = NULL,
   hwe = NULL,
@@ -26,11 +24,7 @@ qcSNPs(x, ...)
 
 \item{...}{Additional optional arguments.}
 
-\item{missing_ind}{Maximum allowed proportion of missing data per individual (currently not implemented).}
-
-\item{missing_snp}{Maximum allowed proportion of missing data per SNP (currently not implemented).}
-
-\item{min_snp_cr}{Minimum acceptable call rate for SNPs (e.g., 0.95). SNPs below this threshold are removed.}
+\item{min_snp_cr}{Minimum acceptable call rate for SNPs (e.g., 0.95). SNPs below this threshold are removed. For per-individual missingness use \code{qcSamples(smp_cr = ...)}.}
 
 \item{min_maf}{Minimum minor allele frequency allowed for SNPs (e.g., 0.05). SNPs with lower MAF are removed.}
 

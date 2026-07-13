@@ -7,17 +7,24 @@
 check.identical.samples.by.block(genotypes, blcsize, threshold = 0)
 }
 \arguments{
-\item{genotypes}{Genotype matrix.}
+\item{genotypes}{Genotype matrix (samples x SNPs) or SnpMatrix with sample
+names as rownames.}
 
 \item{blcsize}{Block size (number of SNPs).}
 
 \item{threshold}{Distance threshold. Default 0.}
 }
 \value{
-List of identical sample pairs.
+A data.frame of identical sample pairs (columns \code{Sample1},
+  \code{Sample2}, \code{Distance}); \code{Distance} is taken from the first
+  block. Empty data.frame if none.
 }
 \description{
-Identifies identical samples within SNP blocks.
+Identifies sample pairs that stay identical (within \code{threshold}) across
+\emph{every} SNP block, scanning the markers in blocks of \code{blcsize}.
+Each block only re-checks the samples still in a confirmed pair, and pairs
+that separate in any block are dropped, so the result is the intersection of
+the per-block identical pairs.
 }
 \examples{
 set.seed(1)

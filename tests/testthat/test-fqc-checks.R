@@ -100,3 +100,36 @@ test_that("qcSNPs no_position filter removes both zero and NA positions", {
   rep <- suppressMessages(qcSNPs(x, no_position = TRUE, action = "report"))
   expect_setequal(rep$removed_no_position, c("m1", "m3"))
 })
+
+test_that("check.identical.samples.by.block keeps pairs identical in every block", {
+  m <- rbind(s1 = c(0, 1, 2, 0),
+             s2 = c(0, 1, 2, 0),   # identical to s1 in both blocks
+             s3 = c(2, 2, 0, 1))
+  colnames(m) <- paste0("snp", 1:4)
+  res <- suppressWarnings(suppressMessages(
+    check.identical.samples.by.block(m, blcsize = 2, threshold = 0)))
+  expect_equal(nrow(res), 1)
+  expect_setequal(c(res$Sample1, res$Sample2), c("s1", "s2"))
+})
+
+test_that("by.block drops a pair that separates in a later block", {
+  m <- rbind(s1 = c(0, 1, 2, 0),
+             s2 = c(0, 1, 0, 2),   # equal in block 1, differs in block 2
+             s3 = c(2, 2, 1, 1))
+  colnames(m) <- paste0("snp", 1:4)
+  res <- suppressWarnings(suppressMessages(
+    check.identical.samples.by.block(m, blcsize = 2, threshold = 0)))
+  expect_equal(nrow(res), 0)
+})
+
+test_that("by.block is safe with fewer than two samples", {
+  m <- matrix(c(0, 1, 2, 0), nrow = 1, dimnames = list("s1", paste0("snp", 1:4)))
+  expect_equal(nrow(suppressWarnings(
+    check.identical.samples.by.block(m, blcsize = 2))), 0)
+})
+
+test_that("get.correl.fc concordance is unchanged by dropping the dead term", {
+  expect_equal(get.correl.fc(c(0, 1, 2, 1, 2), c(0, 1, 2, 2, 1)), 0.5)
+  expect_equal(get.correl.fc(c(1, 2, 1, 2), c(1, 2, 1, 2)), 1)   # all match
+  expect_equal(get.correl.fc(c(0, 0), c(0, 0)), 0)               # nothing co-called
+})

@@ -6,9 +6,7 @@
 #' and optionally removing SNPs at the same genomic position (keeping the one with highest MAF).
 #'
 #' @param x An object of class SNPDataLong.
-#' @param missing_ind Maximum allowed proportion of missing data per individual (currently not implemented).
-#' @param missing_snp Maximum allowed proportion of missing data per SNP (currently not implemented).
-#' @param min_snp_cr Minimum acceptable call rate for SNPs (e.g., 0.95). SNPs below this threshold are removed.
+#' @param min_snp_cr Minimum acceptable call rate for SNPs (e.g., 0.95). SNPs below this threshold are removed. For per-individual missingness use \code{qcSamples(smp_cr = ...)}.
 #' @param min_maf Minimum minor allele frequency allowed for SNPs (e.g., 0.05). SNPs with lower MAF are removed.
 #' @param hwe p-value threshold for Hardy-Weinberg equilibrium test (e.g., 1e-6). SNPs violating this are removed.
 #' @param snp_position Logical. If TRUE, removes SNPs mapped to the same position, retaining only the one with highest MAF.
@@ -52,8 +50,6 @@ setGeneric("qcSNPs", function(x, ...) standardGeneric("qcSNPs"))
 #' @rdname qcSNPs
 #' @export
 setMethod("qcSNPs", "SNPDataLong", function(x,
-                                            missing_ind = NULL,
-                                            missing_snp = NULL,
                                             min_snp_cr = NULL,
                                             min_maf = NULL,
                                             hwe = NULL,

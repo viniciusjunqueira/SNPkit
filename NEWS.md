@@ -18,6 +18,17 @@
   missing (`NA`), blank, non-numeric, or zero (previously only `== 0`, which
   also returned spurious `NA` names when positions were missing). `qcSNPs()`
   uses the same check consistently before the same-position filter.
+* `check.identical.samples.by.block()` now returns the pairs identical across
+  *every* block (data.frame), instead of only the last block's pairs, and is
+  guarded against fewer than two samples.
+* Removed the always-zero concordance term in `get.correl.fc()` (result
+  unchanged).
+
+## Removed
+
+* `qcSNPs()` drops the `missing_ind` and `missing_snp` arguments, which were
+  never implemented. Use `min_snp_cr` for per-SNP call rate and
+  `qcSamples(smp_cr = ...)` for per-individual call rate.
 
 ## Internal changes
 
