@@ -9,7 +9,8 @@ savePlink(
   path,
   name = "plink_data",
   run_plink = TRUE,
-  chunk_size = 1000
+  chunk_size = 1000,
+  extra_args = NULL
 )
 }
 \arguments{
@@ -23,6 +24,11 @@ by the caller (e.g. a folder inside \code{tempdir()} for examples).}
 \item{run_plink}{Logical. If TRUE (default), runs PLINK1 to convert to binary files. If FALSE, only .ped and .map files are saved.}
 
 \item{chunk_size}{Integer. Number of individuals per chunk for writing .ped file (default: 1000).}
+
+\item{extra_args}{Character vector. Extra arguments appended verbatim to the
+PLINK command line when \code{run_plink = TRUE}. Useful for non-human data;
+e.g. \code{"--chr-set 29"} makes PLINK treat autosomes 1-29 correctly for
+cattle instead of reading 23-26 as human X/Y/XY/MT. Default is NULL.}
 }
 \value{
 No return value, called for side effects. Files (\code{.ped}/\code{.map},

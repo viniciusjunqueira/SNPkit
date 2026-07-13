@@ -18,7 +18,8 @@
 #'                                           c("SNP3", "SNP4"))))
 #' cbind_SnpMatrix(m1, m2)
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 cbind_SnpMatrix <- function(...) {
   mats <- list(...)
 
@@ -62,7 +63,8 @@ cbind_SnpMatrix <- function(...) {
 #'                                           c("SNP1", "SNP2", "SNP3"))))
 #' rbind_SnpMatrix(m1, m2)
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 rbind_SnpMatrix <- function(...) {
   mats <- list(...)
 
@@ -129,31 +131,32 @@ combineSNPData <- function(lista) {
   snps_all <- Reduce(union, lapply(lista, function(x) colnames(x@geno)))
   message("Unified SNP panel with ", length(snps_all), " SNPs.")
 
+  # Preserve the missing-rownames fallback before binding: rbindSnpFlexible does
+  # not assign default sample names, so we do it here to match legacy behavior.
   geno_list <- lapply(lista, function(x) {
     geno <- x@geno
-    missing_snps <- setdiff(snps_all, colnames(geno))
-
-    if (length(missing_snps) > 0) {
-      message("Adding ", length(missing_snps), " missing SNPs filled with NA for one matrix...")
-      na_block <- new("SnpMatrix", matrix(as.raw(0),
-                                          nrow = nrow(geno),
-                                          ncol = length(missing_snps),
-                                          dimnames = list(rownames(geno), missing_snps)))
-      geno <- cbind_SnpMatrix(geno, na_block)
-    }
-
-    geno <- geno[, snps_all, drop = FALSE]
-
     if (is.null(rownames(geno)) || any(rownames(geno) == "")) {
       warning("Some samples had missing rownames. Assigned default sample names.")
       rownames(geno) <- sprintf("Sample_%d", seq_len(nrow(geno)))
     }
-
     geno
   })
 
-  geno_comb <- do.call(rbind_SnpMatrix, geno_list)
+  # rbindSnpFlexible unifies differing SNP columns (filling gaps with NA) in a
+  # single preallocated pass. It requires >= 2 matrices, so a single-object list
+  # bypasses it and returns the lone genotype matrix directly.
+  geno_comb <- if (length(geno_list) == 1) {
+    geno_list[[1]]
+  } else {
+    do.call(rbindSnpFlexible, geno_list)
+  }
 
+  if (!inherits(geno_comb, "SnpMatrix")) {
+    geno_comb <- as(geno_comb, "SnpMatrix")
+  }
+
+  # The assembled genotype column order is authoritative for aligning the map.
+  snps_all <- colnames(geno_comb)
   map_all <- do.call(rbind, lapply(lista, function(x) x@map))
   map_all <- map_all[!duplicated(map_all$Name), , drop = FALSE]
   map_final <- map_all[match(snps_all, map_all$Name), , drop = FALSE]
@@ -161,10 +164,6 @@ combineSNPData <- function(lista) {
   if (any(is.na(map_final$Name))) {
     missing_snps <- snps_all[is.na(match(snps_all, map_all$Name))]
     warning("Some SNPs missing in combined map: ", paste(missing_snps, collapse = ", "))
-  }
-
-  if (!inherits(geno_comb, "SnpMatrix")) {
-    geno_comb <- as(geno_comb, "SnpMatrix")
   }
 
   message("Combination complete. Final matrix: ", nrow(geno_comb), " samples x ", ncol(geno_comb), " SNPs.")

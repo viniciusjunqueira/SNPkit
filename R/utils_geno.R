@@ -16,7 +16,8 @@
 #'                                           c("SNP2", "SNP4"))))
 #' rbindSnpFlexible(m1, m2)
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 rbindSnpFlexible <- function(...) {
   matrices <- list(...)
 
