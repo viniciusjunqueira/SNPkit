@@ -1,3 +1,15 @@
+## Version and year are read from the package DESCRIPTION so this citation
+## never goes stale when the version is bumped. Prefer the CRAN publication
+## date (present in installed builds), then Date, then the current year.
+year <- NULL
+for (f in c(meta[["Date/Publication"]], meta$Date)) {
+  y <- sub("-.*", "", f)
+  if (length(y) == 1L && !is.na(y) && nzchar(y)) { year <- y; break }
+}
+if (is.null(year)) year <- format(Sys.Date(), "%Y")
+ver <- meta$Version
+if (is.null(ver) || !nzchar(ver)) ver <- "unknown"
+
 citHeader("To cite the 'SNPkit' package in publications, use:")
 
 bibentry(
@@ -13,7 +25,7 @@ bibentry(
     person(given = "Marcos Jun Iti", family = "Yokoo",
            email = "marcos.yokoo@embrapa.br", role = "aut")
   ),
-  year = 2025,
-  note = "R package version 0.1.0",
+  year = year,
+  note = paste("R package version", ver),
   url = "https://github.com/viniciusjunqueira/SNPkit"
 )

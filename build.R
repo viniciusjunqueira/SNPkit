@@ -38,7 +38,8 @@
 #
 # Check if tar.gz is fine as this is what is needed for CRAN
 {
-  system("R CMD check SNPkit_0.1.0.tar.gz")
+  versao <- read.dcf("DESCRIPTION")[1, "Version"]
+  system(paste0("R CMD check SNPkit_", versao, ".tar.gz"))
 }
 
 #
@@ -50,8 +51,9 @@
   # devtools::build()
   # devtools::check()
   devtools::check(cran = TRUE)
-  # devtools::check("SNPkit_0.1.0.tar.gz")
-  # system("R CMD check SNPkit_0.1.0.tar.gz")
+  # versao <- read.dcf("DESCRIPTION")[1, "Version"]
+  # devtools::check(paste0("SNPkit_", versao, ".tar.gz"))
+  # system(paste0("R CMD check SNPkit_", versao, ".tar.gz"))
 }
 
 
